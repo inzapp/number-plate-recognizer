@@ -51,5 +51,6 @@
 			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="output" path="target/classes"/>
+	<classpathentry kind="output" path="target/classes"/>	
+	<classpathentry kind="lib" path="/inz/lib/opencv-401.jar"/>
 </classpath>
