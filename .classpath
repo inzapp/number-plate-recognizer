@@ -51,5 +51,12 @@
 			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="output" path="target/classes"/>
+	<classpathentry kind="output" path="target/classes"/>	
+	<classpathentry kind="lib" path="/inz/lib/opencv-401.jar"/>
+	<classpathentry kind="lib" path="/usr/share/openjfx/lib/javafx.base.jar"/>
+	<classpathentry kind="lib" path="/usr/share/openjfx/lib/javafx.controls.jar"/>
+	<classpathentry kind="lib" path="/usr/share/openjfx/lib/javafx.fxml.jar"/>
+	<classpathentry kind="lib" path="/usr/share/openjfx/lib/javafx.graphics.jar"/>
+	<classpathentry kind="lib" path="/usr/share/openjfx/lib/javafx.swing.jar"/>
+	<classpathentry kind="lib" path="/usr/share/openjfx/lib/javafx.web.jar"/>
 </classpath>
