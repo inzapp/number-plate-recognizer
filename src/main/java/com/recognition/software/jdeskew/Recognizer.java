@@ -2,6 +2,7 @@ package com.recognition.software.jdeskew;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -22,7 +23,7 @@ import javafx.stage.Stage;
 
 class pRes {
 	
-	public static List<File> choosedFileList;
+	public static List<String> choosedFilePathList;
 }
 
 abstract class View {
@@ -92,16 +93,22 @@ public class Recognizer extends Application implements Initializable, EventInjec
 			return;
 		}
 		
-		pRes.choosedFileList = fileList;
-		for(File curFile : pRes.choosedFileList) {
-			System.out.println(curFile.getAbsolutePath());
-			View.imgList.getItems().add(curFile.getAbsolutePath());
+		for(File curFile : fileList) {
+			pRes.choosedFilePathList.add(curFile.getAbsolutePath());
+			View.imgList.getItems().add(curFile.getName());
 		}
 	}
 
 	@Override
 	public void clickRemoveBt() {
-		System.out.println(View.imgList.getFocusModel());
+		int removeIdx = View.imgList.getFocusModel().getFocusedIndex();
+		System.out.println(removeIdx);
+		View.imgList.getItems().remove(removeIdx);
+		pRes.choosedFilePathList.remove(removeIdx);
+		
+		for(String curPath : pRes.choosedFilePathList) {
+			System.out.println(curPath);
+		}
 	}
 
 	@Override
@@ -123,6 +130,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		primaryStage.setResizable(false);
 		primaryStage.show();
 
+		pRes.choosedFilePathList = new ArrayList<>();
 		this.stage = primaryStage;
 	}
 
