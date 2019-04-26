@@ -25,23 +25,25 @@ abstract class View {
 	public static Label resultLb;
 }
 
-class ClickEventAssignmenter {
+interface EventInjector {
 	
-	public void clickAddBt() {
-		
-	}
+	public void injectView();
 	
-	public void clickRemoveBt() {
-		
-	}
+	public void injectEvent();
 	
-	public void clickStartBt() {
-		
-	}
+	public void clickAddBt();
+	
+	public void clickRemoveBt();
+	
+	public void clickStartBt();
 }
 
-public class Recognizer extends Application implements Initializable {
+public class Recognizer extends Application implements Initializable, EventInjector {
 
+	static {
+		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+	}
+	
 	@FXML
 	private ImageView imgView;
 	
@@ -52,12 +54,55 @@ public class Recognizer extends Application implements Initializable {
 	private Button addBt, removeBt, startBt;
 	
 	@FXML
-	private Label resultLb; 
-
-	static {
-		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+	private Label resultLb;
+	
+	@Override
+	public void injectView() {
+		View.imgView = this.imgView;
+		View.imgList = this.imgList;
+		View.addBt = this.addBt;
+		View.removeBt = this.removeBt;
+		View.startBt = this.startBt;
+		View.resultLb = this.resultLb;
 	}
 
+	@Override
+	public void injectEvent() {
+		View.addBt.setOnAction(event -> this.clickAddBt());
+		View.removeBt.setOnAction(event -> this.clickRemoveBt());
+		View.startBt.setOnAction(event -> this.clickStartBt());
+	}
+
+	@Override
+	public void clickAddBt() {
+		
+	}
+
+	@Override
+	public void clickRemoveBt() {
+		
+	}
+
+	@Override
+	public void clickStartBt() {
+		
+	}
+
+	@Override
+	public void initialize(URL location, ResourceBundle resources) {
+		injectView();
+		injectEvent();
+	}
+
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		Parent fxml = FXMLLoader.load(getClass().getResource("gui.fxml"));
+		primaryStage.setScene(new Scene(fxml));
+		primaryStage.setTitle("Number plate recognizer by inzapp");
+		primaryStage.setResizable(false);
+		primaryStage.show();
+	}
+	
 	public static void main(String[] args) {
 		launch(args);
 		
@@ -71,27 +116,5 @@ public class Recognizer extends Application implements Initializable {
         // }
 
         // Mat mat = new Mat();
-	}
-
-	@Override
-	public void initialize(URL location, ResourceBundle resources) {
-		View.imgView = this.imgView;
-		View.imgList = this.imgList;
-		View.addBt = this.addBt;
-		View.removeBt = this.removeBt;
-		View.resultLb = this.resultLb;
-		
-		View.addBt.setOnAction(event -> {
-			
-		});
-	}
-
-	@Override
-	public void start(Stage primaryStage) throws Exception {
-		Parent fxml = FXMLLoader.load(getClass().getResource("gui.fxml"));
-		primaryStage.setScene(new Scene(fxml));
-		primaryStage.setTitle("Number plate recognizer by inzapp");
-		primaryStage.setResizable(false);
-		primaryStage.show();
 	}
 }
