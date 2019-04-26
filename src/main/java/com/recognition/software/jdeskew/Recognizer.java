@@ -25,6 +25,21 @@ abstract class View {
 	public static Label resultLb;
 }
 
+class ClickEventAssignmenter {
+	
+	public void clickAddBt() {
+		
+	}
+	
+	public void clickRemoveBt() {
+		
+	}
+	
+	public void clickStartBt() {
+		
+	}
+}
+
 public class Recognizer extends Application implements Initializable {
 
 	@FXML
@@ -65,12 +80,17 @@ public class Recognizer extends Application implements Initializable {
 		View.addBt = this.addBt;
 		View.removeBt = this.removeBt;
 		View.resultLb = this.resultLb;
+		
+		View.addBt.setOnAction(event -> {
+			
+		});
 	}
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		Parent fxml = FXMLLoader.load(getClass().getResource("gui.fxml"));
 		primaryStage.setScene(new Scene(fxml));
+		primaryStage.setTitle("Number plate recognizer by inzapp");
 		primaryStage.setResizable(false);
 		primaryStage.show();
 	}
