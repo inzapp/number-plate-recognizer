@@ -8,7 +8,7 @@
 <?import javafx.scene.text.Font?>
 
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="342.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="342.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.recognition.software.jdeskew.Recognizer">
    <children>
       <ImageView fx:id="imgView" fitHeight="311.0" fitWidth="356.0" layoutX="14.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
       <ListView fx:id="imgList" layoutX="386.0" layoutY="14.0" prefHeight="172.0" prefWidth="200.0" />
