@@ -20,6 +20,17 @@ public class Recognizer extends Application implements Initializable {
 
 	public static void main(String[] args) {
 		launch(args);
+		
+		// File img = new File("1.bmp");
+        // Tesseract ts = new Tesseract();
+        // ts.setDatapath("src/main/resources/tessdata");
+        // try {
+        //     System.out.println(ts.doOCR(img));
+        // } catch (TesseractException e) {
+        //     e.printStackTrace();
+        // }
+
+        // Mat mat = new Mat();
 	}
 
 	@Override
