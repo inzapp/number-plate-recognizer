@@ -47,11 +47,20 @@ interface EventInjector {
 	public void clickStartBt();
 }
 
+class ROIExtractor {
+	
+//	public boolean is
+}
+
 public class Recognizer extends Application implements Initializable, EventInjector {
 
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
+	
+	private String[] validExtension = {
+			"png", "jpg", "bmp", "jpeg"
+	};
 
 	private Stage stage;
 
@@ -87,22 +96,48 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	@Override
 	public void clickAddBt(Stage stage) {
 		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle("이미지를 선택하세요");
 		List<File> fileList = fileChooser.showOpenMultipleDialog(stage);
 		if(fileList == null) {
 			return;
 		}
 		
 		for(File curFile : fileList) {
+			if(!isValidExtension(curFile.getAbsolutePath())) {
+				continue;
+			}
+			
 			pRes.choosedFilePathList.add(curFile.getAbsolutePath());
 			View.imgList.getItems().add(curFile.getName());
 		}
+	}
+	
+	private boolean isValidExtension(String absPath) {
+		int dotIdx = -1;
+		for(int i=absPath.length() - 1; i>=0; --i) {
+			if(absPath.charAt(i) == '.') {
+				dotIdx = i;
+				break;
+			}
+		}
+		
+		if(dotIdx == -1) {
+			return false;
+		}
+		
+		String extension = absPath.substring(dotIdx + 1);
+		System.out.println(extension);
+		for(String curValidExtension : this.validExtension) {
+			if(extension.equals(curValidExtension)) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	@Override
 	public void clickRemoveBt() {
 		int removeIdx = View.imgList.getFocusModel().getFocusedIndex();
-		System.out.println(removeIdx);
 		View.imgList.getItems().remove(removeIdx);
 		pRes.choosedFilePathList.remove(removeIdx);
 		
