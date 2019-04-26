@@ -40,7 +40,7 @@ public class Recognizer extends Application implements Initializable {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		Parent fxml = FXMLLoader.load(getClass().getResource("test.fxml"));
+		Parent fxml = FXMLLoader.load(getClass().getResource("gui.fxml"));
 		primaryStage.setScene(new Scene(fxml));
 		primaryStage.setResizable(false);
 		primaryStage.show();
