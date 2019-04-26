@@ -138,6 +138,10 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	@Override
 	public void clickRemoveBt() {
 		int removeIdx = View.imgList.getFocusModel().getFocusedIndex();
+		if(removeIdx == -1) {
+			return;
+		}
+		
 		View.imgList.getItems().remove(removeIdx);
 		pRes.choosedFilePathList.remove(removeIdx);
 		
@@ -163,6 +167,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		primaryStage.setScene(new Scene(fxml));
 		primaryStage.setTitle("Number plate recognizer by inzapp");
 		primaryStage.setResizable(false);
+		primaryStage.setOnCloseRequest(event -> System.exit(0));
 		primaryStage.show();
 
 		pRes.choosedFilePathList = new ArrayList<>();
