@@ -6,13 +6,38 @@ import java.util.ResourceBundle;
 import org.opencv.core.Core;
 
 import javafx.application.Application;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 
+abstract class View {
+	
+	public static ImageView imgView;
+	public static ListView<String> imgList;
+	public static Button addBt, removeBt, startBt;
+	public static Label resultLb;
+}
+
 public class Recognizer extends Application implements Initializable {
+
+	@FXML
+	private ImageView imgView;
+	
+	@FXML
+	private ListView<String> imgList;
+	
+	@FXML
+	private Button addBt, removeBt, startBt;
+	
+	@FXML
+	private Label resultLb; 
 
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -35,7 +60,11 @@ public class Recognizer extends Application implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		
+		View.imgView = this.imgView;
+		View.imgList = this.imgList;
+		View.addBt = this.addBt;
+		View.removeBt = this.removeBt;
+		View.resultLb = this.resultLb;
 	}
 
 	@Override

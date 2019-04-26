@@ -14,7 +14,7 @@
       <ListView fx:id="imgList" layoutX="386.0" layoutY="14.0" prefHeight="172.0" prefWidth="200.0" />
       <Button fx:id="addBt" layoutX="386.0" layoutY="197.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="91.0" text="사진추가" />
       <Button fx:id="startBt" layoutX="385.0" layoutY="231.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="200.0" text="검출" />
-      <Label fx:id="resultLb" alignment="CENTER" layoutX="398.0" layoutY="266.0" prefHeight="65.0" prefWidth="175.0" text="결과">
+      <Label fx:id="resultLb" alignment="CENTER" layoutX="398.0" layoutY="266.0" prefHeight="65.0" prefWidth="175.0">
          <font>
             <Font size="29.0" />
          </font>
