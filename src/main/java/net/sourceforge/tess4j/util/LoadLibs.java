@@ -54,7 +54,7 @@ public class LoadLibs {
     /**
      * Native library name.
      */
-    public static final String LIB_NAME = "libtesseract410";
+    public static final String LIB_NAME = "libtesseract500";
     public static final String LIB_NAME_NON_WIN = "tesseract";
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(new LoggHelper().toString());
@@ -82,7 +82,7 @@ public class LoadLibs {
      * <code>Native.loadLibrary()</code>.
      */
     public static TessAPI getTessAPIInstance() {
-        return (TessAPI) Native.loadLibrary(getTesseractLibName(), TessAPI.class);
+        return (TessAPI) Native.load(getTesseractLibName(), TessAPI.class);
     }
 
     /**

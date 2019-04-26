@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Implementation-Title: Tess4J - Tesseract for Java
+Implementation-Version: 5.0.0-SNAPSHOT
+Built-By: inzapp
+Specification-Vendor: Tess4J
+Specification-Title: Tess4J - Tesseract for Java
+Implementation-Vendor-Id: net.sourceforge.tess4j
+Build-Jdk: 1.8.0_211
+Specification-Version: 5.0
+Created-By: Maven Integration for Eclipse
+Implementation-URL: http://tess4j.sourceforge.net
+Implementation-Vendor: Tess4J
+
+Name: Build-Information
+Java-Version: 1.8.0_211
+Java-Vendor: Oracle Corporation
+Os-Name: Windows 10
+
