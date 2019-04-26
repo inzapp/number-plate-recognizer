@@ -20,68 +20,25 @@ import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-class View {
+class pRes {
+	
+	private List<File> choosedFileList;
 
-	private ImageView imgView;
-	private ListView<String> imgList;
-	private Button addBt, removeBt, startBt;
-	private Label resultLb;
-
-	static class Singleton {
-		static View INSTANCE = new View();
+	public List<File> getChoosedFileList() {
+		return choosedFileList;
 	}
 
-	public static View getInstance() {
-		return Singleton.INSTANCE;
+	public void setChoosedFileList(List<File> choosedFileList) {
+		this.choosedFileList = choosedFileList;
 	}
+}
 
-	public ImageView getImgView() {
-		return imgView;
-	}
+abstract class View {
 
-	public void setImgView(ImageView imgView) {
-		this.imgView = imgView;
-	}
-
-	public ListView<String> getImgList() {
-		return imgList;
-	}
-
-	public void setImgList(ListView<String> imgList) {
-		this.imgList = imgList;
-	}
-
-	public Button getAddBt() {
-		return addBt;
-	}
-
-	public void setAddBt(Button addBt) {
-		this.addBt = addBt;
-	}
-
-	public Button getRemoveBt() {
-		return removeBt;
-	}
-
-	public void setRemoveBt(Button removeBt) {
-		this.removeBt = removeBt;
-	}
-
-	public Button getStartBt() {
-		return startBt;
-	}
-
-	public void setStartBt(Button startBt) {
-		this.startBt = startBt;
-	}
-
-	public Label getResultLb() {
-		return resultLb;
-	}
-
-	public void setResultLb(Label resultLb) {
-		this.resultLb = resultLb;
-	}
+	public static ImageView imgView;
+	public static ListView<String> imgList;
+	public static Button addBt, removeBt, startBt;
+	public static Label resultLb;
 }
 
 interface EventInjector {
@@ -104,7 +61,6 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	}
 
 	private Stage stage;
-	private View view;
 
 	@FXML
 	private ImageView imgView;
@@ -120,19 +76,19 @@ public class Recognizer extends Application implements Initializable, EventInjec
 
 	@Override
 	public void injectView() {
-		view.setImgView(imgView);
-		view.setImgList(imgList);
-		view.setAddBt(addBt);
-		view.setRemoveBt(removeBt);
-		view.setStartBt(startBt);
-		view.setResultLb(resultLb);
+		View.imgView = this.imgView;
+		View.imgList = this.imgList;
+		View.addBt = this.addBt;
+		View.removeBt = this.removeBt;
+		View.startBt = this.startBt;
+		View.resultLb = this.resultLb;
 	}
 
 	@Override
 	public void injectEvent() {
-		view.getAddBt().setOnMouseClicked(event -> this.clickAddBt(stage));
-		view.getRemoveBt().setOnMouseClicked(event -> this.clickRemoveBt());
-		view.getStartBt().setOnMouseClicked(event -> this.clickStartBt());
+		View.addBt.setOnMouseClicked(event -> this.clickAddBt(stage));
+		View.removeBt.setOnMouseClicked(event -> this.clickRemoveBt());
+		View.startBt.setOnMouseClicked(event -> this.clickStartBt());
 	}
 
 	@Override
@@ -140,6 +96,10 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle("이미지를 선택하세요");
 		List<File> fileList = fileChooser.showOpenMultipleDialog(stage);
+		if(fileList == null) {
+			return;
+		}
+		
 		for(File curFile : fileList) {
 			System.out.println(curFile.getAbsolutePath());
 		}
@@ -157,7 +117,6 @@ public class Recognizer extends Application implements Initializable, EventInjec
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		view = View.getInstance();
 		injectView();
 		injectEvent();
 	}
@@ -171,7 +130,6 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		primaryStage.show();
 
 		this.stage = primaryStage;
-		this.view = View.getInstance();
 	}
 
 	public static void main(String[] args) {
