@@ -22,15 +22,7 @@ import javafx.stage.Stage;
 
 class pRes {
 	
-	private List<File> choosedFileList;
-
-	public List<File> getChoosedFileList() {
-		return choosedFileList;
-	}
-
-	public void setChoosedFileList(List<File> choosedFileList) {
-		this.choosedFileList = choosedFileList;
-	}
+	public static List<File> choosedFileList;
 }
 
 abstract class View {
@@ -100,14 +92,16 @@ public class Recognizer extends Application implements Initializable, EventInjec
 			return;
 		}
 		
-		for(File curFile : fileList) {
+		pRes.choosedFileList = fileList;
+		for(File curFile : pRes.choosedFileList) {
 			System.out.println(curFile.getAbsolutePath());
+			View.imgList.getItems().add(curFile.getAbsolutePath());
 		}
 	}
 
 	@Override
 	public void clickRemoveBt() {
-
+		System.out.println(View.imgList.getFocusModel());
 	}
 
 	@Override
