@@ -11,6 +11,7 @@ import java.util.ResourceBundle;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -72,6 +73,22 @@ class ROIExtractor {
 		Imgproc.Canny(processed, processed, 300, 500);
 		ArrayList<MatOfPoint> contourList = new ArrayList<>();
 		Imgproc.findContours(processed, contourList, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+		
+		int contourListSize = contourList.size();
+		MatOfPoint[] contourPoly = new MatOfPoint[contourListSize];
+		Rect[] boundRect = new Rect[contourListSize];
+		Rect[] boundRect2 = new Rect[contourListSize];
+		
+		for(int i=0; i<contourListSize; ++i) {
+			contourPoly[i] = new MatOfPoint();
+			boundRect[i] = new Rect();
+			boundRect2[i] = new Rect();
+		}
+		
+		double ratio = -1;
+		for(int i=0; i<contourList.size(); ++i) {
+//			Imgproc.approxPolyDP(contourList.get(i), contourPoly[i], 1, true);
+		}
 		
 		for(MatOfPoint curContour : contourList) {
 			double area = Imgproc.contourArea(curContour);
@@ -181,7 +198,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		if (!invalidPath.equals("")) {
 			Alert alert = new Alert(AlertType.ERROR);
 			alert.setTitle("Error");
-			alert.setHeaderText("추가하신 파일 중 사진 파일이 아닌 것이 포함되어있습니다.\n해당 파일은 추가될 수 없습니다.");
+			alert.setHeaderText("추가된 파일 중 사진 파일이 아닌 것이 포함되어있습니다.\n해당 파일은 추가될 수 없습니다.");
 			alert.setContentText(invalidPath);
 			alert.showAndWait();
 		}
