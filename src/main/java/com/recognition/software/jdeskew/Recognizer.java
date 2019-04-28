@@ -54,17 +54,46 @@ class ROIExtractor {
 //	public boolean is
 }
 
+class ValidExtensionChecker {
+
+	private String[] validExtension = {
+			"png", "jpg", "bmp", "jpeg"
+	};
+
+	public boolean isValidExtension(String absPath) {
+		int dotIdx = -1;
+		for(int i=absPath.length() - 1; i>=0; --i) {
+			if(absPath.charAt(i) == '.') {
+				dotIdx = i;
+				break;
+			}
+		}
+		
+		if(dotIdx == -1) {
+			return false;
+		}
+		
+		String extension = absPath.substring(dotIdx + 1);
+		System.out.println(extension);
+		for(String curValidExtension : this.validExtension) {
+			if(extension.equals(curValidExtension)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+}
+
 public class Recognizer extends Application implements Initializable, EventInjector {
 
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
-	
-	private String[] validExtension = {
-			"png", "jpg", "bmp", "jpeg"
-	};
 
 	private Stage stage;
+	
+	private ValidExtensionChecker validExtensionChecker;
 
 	@FXML
 	private ImageView imgView;
@@ -107,7 +136,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		String invalidPath = "";
 		for(File curFile : fileList) {
 			absPath = curFile.getAbsolutePath();
-			if(!isValidExtension(absPath)) {
+			if(!validExtensionChecker.isValidExtension(absPath)) {
 				invalidPath += absPath + System.getProperty("line.separator");
 				continue;
 			}
@@ -125,29 +154,6 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		}
 	}
 	
-	private boolean isValidExtension(String absPath) {
-		int dotIdx = -1;
-		for(int i=absPath.length() - 1; i>=0; --i) {
-			if(absPath.charAt(i) == '.') {
-				dotIdx = i;
-				break;
-			}
-		}
-		
-		if(dotIdx == -1) {
-			return false;
-		}
-		
-		String extension = absPath.substring(dotIdx + 1);
-		System.out.println(extension);
-		for(String curValidExtension : this.validExtension) {
-			if(extension.equals(curValidExtension)) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
 
 	@Override
 	public void clickRemoveBt() {
@@ -184,8 +190,9 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		primaryStage.setOnCloseRequest(event -> System.exit(0));
 		primaryStage.show();
 
-		pRes.choosedFilePathList = new ArrayList<>();
 		this.stage = primaryStage;
+		pRes.choosedFilePathList = new ArrayList<>();
+		validExtensionChecker = new ValidExtensionChecker();
 	}
 
 	public static void main(String[] args) {
