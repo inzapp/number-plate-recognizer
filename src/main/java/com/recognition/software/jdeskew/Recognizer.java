@@ -9,8 +9,11 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -25,9 +28,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
 
 class pRes {
-	
+
 	public static List<String> choosedFilePathList;
 }
 
@@ -50,47 +55,44 @@ interface EventInjector {
 	public void clickRemoveBt();
 
 	public void clickStartBt();
-	
+
 	public void clickListMenu();
 }
 
 class ROIExtractor {
-	
-	public int[] getRoiPoint(String filePath) {
-				
-		int[] roiPoint = new int[4];
-		return roiPoint;
+
+	public Mat getROI(Mat rawImg) {
+
+		Mat roi = new Mat();
+		return roi;
 	}
 }
 
 class ValidExtensionChecker {
 
-	private String[] validExtension = {
-			"png", "jpg", "bmp", "jpeg",
-			"PNG", "JPG", "BMP", "JPEG"
-	};
+	private String[] validExtension = { "png", "jpg", "bmp", "jpeg", "PNG", "JPG", "BMP", "JPEG" };
 
 	public boolean isValidExtension(String absPath) {
 		int dotIdx = -1;
-		for(int i=absPath.length() - 1; i>=0; --i) {
-			if(absPath.charAt(i) == '.') {
+		for (int i = absPath.length() - 1; i >= 0; --i) {
+			if (absPath.charAt(i) == '.') {
 				dotIdx = i;
 				break;
 			}
 		}
-		
-		if(dotIdx == -1) {
+
+		if (dotIdx == -1) {
 			return false;
 		}
-		
+
 		String extension = absPath.substring(dotIdx + 1);
 		System.out.println(extension);
-		for(String curValidExtension : this.validExtension) {
-			if(extension.equals(curValidExtension)) {
+		for (String curValidExtension : this.validExtension) {
+			if (extension.equals(curValidExtension)) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 }
@@ -102,7 +104,11 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	}
 
 	private ValidExtensionChecker validExtensionChecker;
+
+	private ROIExtractor roiExtractor;
 	
+	private Tesseract tesseract;
+
 	private Stage stage;
 
 	@FXML
@@ -139,24 +145,24 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	public void clickAddBt(Stage stage) {
 		FileChooser fileChooser = new FileChooser();
 		List<File> fileList = fileChooser.showOpenMultipleDialog(stage);
-		if(fileList == null) {
+		if (fileList == null) {
 			return;
 		}
-		
+
 		String absPath = null;
 		String invalidPath = "";
-		for(File curFile : fileList) {
+		for (File curFile : fileList) {
 			absPath = curFile.getAbsolutePath();
-			if(!validExtensionChecker.isValidExtension(absPath)) {
+			if (!validExtensionChecker.isValidExtension(absPath)) {
 				invalidPath += absPath + System.getProperty("line.separator");
 				continue;
 			}
-			
+
 			pRes.choosedFilePathList.add(absPath);
 			View.imgList.getItems().add(curFile.getName());
 		}
-		
-		if(!invalidPath.equals("")) {
+
+		if (!invalidPath.equals("")) {
 			Alert alert = new Alert(AlertType.ERROR);
 			alert.setTitle("Error");
 			alert.setHeaderText("추가하신 파일 중 사진 파일이 아닌 것이 포함되어있습니다.\n해당 파일은 추가될 수 없습니다.");
@@ -164,36 +170,57 @@ public class Recognizer extends Application implements Initializable, EventInjec
 			alert.showAndWait();
 		}
 	}
-	
 
 	@Override
 	public void clickRemoveBt() {
 		int removeIdx = View.imgList.getFocusModel().getFocusedIndex();
-		if(removeIdx == -1) {
+		if (removeIdx == -1) {
 			return;
 		}
-		
+
 		View.imgList.getItems().remove(removeIdx);
 		pRes.choosedFilePathList.remove(removeIdx);
-		
-		for(String curPath : pRes.choosedFilePathList) {
+
+		for (String curPath : pRes.choosedFilePathList) {
 			System.out.println(curPath);
 		}
 	}
 
 	@Override
 	public void clickStartBt() {
-		
+		Platform.runLater(() -> {
+			new Thread(() -> {
+				for(int i=0; i<pRes.choosedFilePathList.size(); ++i) {
+					View.imgList.getSelectionModel().select(i);
+					clickListMenu();
+					Mat curRawImg = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
+					Mat roi = roiExtractor.getROI(curRawImg);
+//					Imgcodecs.imwrite("tmp", roi);
+					File img = new File("tmp");
+					try {
+						View.resultLb.setText(tesseract.doOCR(img));
+					} catch (TesseractException e) {
+						e.printStackTrace();
+					}
+					
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}).start();
+		});
 	}
-	
+
 	@Override
 	public void clickListMenu() {
 		int clickedIdx = View.imgList.getFocusModel().getFocusedIndex();
-		if(clickedIdx == -1) {
+		if (clickedIdx == -1) {
 			View.imgView.setImage(null);
 			return;
 		}
-		
+
 		String absPath = pRes.choosedFilePathList.get(clickedIdx);
 		Image image = null;
 		try {
@@ -202,13 +229,16 @@ public class Recognizer extends Application implements Initializable, EventInjec
 			System.out.println("file not found");
 			return;
 		}
-		
+
 		View.imgView.setImage(image);
 	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		validExtensionChecker = new ValidExtensionChecker();
+		roiExtractor = new ROIExtractor();
+		tesseract = new Tesseract();
+		tesseract.setDatapath("src/main/resources/tessdata");
 		injectView();
 		injectEvent();
 	}
