@@ -10,7 +10,11 @@ import java.util.ResourceBundle;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Size;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -62,7 +66,19 @@ interface EventInjector {
 class ROIExtractor {
 
 	public Mat getROI(Mat rawImg) {
-
+		Mat processed = new Mat();
+		Imgproc.blur(rawImg, processed, new Size(2, 2));
+		Imgproc.cvtColor(processed, processed, Imgproc.COLOR_BGR2GRAY);
+		Imgproc.Canny(processed, processed, 300, 500);
+		ArrayList<MatOfPoint> contourList = new ArrayList<>();
+		Imgproc.findContours(processed, contourList, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+		
+		for(MatOfPoint curContour : contourList) {
+			double area = Imgproc.contourArea(curContour);
+			System.out.println(area);
+		}
+		HighGui.imshow("img", processed);
+		HighGui.waitKey(0);
 		Mat roi = new Mat();
 		return roi;
 	}
@@ -198,13 +214,16 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					clickListMenu();
 					Mat curRawImg = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
 					Mat roi = roiExtractor.getROI(curRawImg);
-//					Imgcodecs.imwrite("tmp", roi);
+					Imgcodecs.imwrite("tmp", roi);
 					File img = new File("tmp");
-					try {
-						View.resultLb.setText(tesseract.doOCR(img));
-					} catch (TesseractException e) {
-						e.printStackTrace();
-					}
+					Platform.runLater(() -> {
+						try {
+							System.out.println(tesseract.doOCR(img));
+							View.resultLb.setText(tesseract.doOCR(img));
+						} catch (TesseractException e) {
+							e.printStackTrace();
+						}
+					});
 					
 					try {
 						Thread.sleep(1000);
@@ -241,6 +260,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		roiExtractor = new ROIExtractor();
 		tesseract = new Tesseract();
 		tesseract.setDatapath("src/main/resources/tessdata");
+		tesseract.setLanguage("eng");
 		injectView();
 		injectEvent();
 	}
@@ -251,7 +271,10 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		primaryStage.setScene(new Scene(fxml));
 		primaryStage.setTitle("Number plate recognizer by inzapp");
 		primaryStage.setResizable(false);
-		primaryStage.setOnCloseRequest(event -> System.exit(0));
+		primaryStage.setOnCloseRequest(event -> {
+			new File("tmp").delete();
+			System.exit(0);
+		});
 		primaryStage.show();
 
 		this.stage = primaryStage;
@@ -259,17 +282,9 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	}
 
 	public static void main(String[] args) {
-		launch(args);
-
-		// File img = new File("1.bmp");
-		// Tesseract ts = new Tesseract();
-		// ts.setDatapath("src/main/resources/tessdata");
-		// try {
-		// System.out.println(ts.doOCR(img));
-		// } catch (TesseractException e) {
-		// e.printStackTrace();
-		// }
-
-		// Mat mat = new Mat();
+//		launch(args);
+		ROIExtractor roi = new ROIExtractor();
+		Mat mat = Imgcodecs.imread("2323.jpg", Imgcodecs.IMREAD_ANYCOLOR);
+		roi.getROI(mat);
 	}
 }
