@@ -14,6 +14,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -101,13 +103,25 @@ public class Recognizer extends Application implements Initializable, EventInjec
 			return;
 		}
 		
+		String absPath = null;
+		String invalidPath = "";
 		for(File curFile : fileList) {
-			if(!isValidExtension(curFile.getAbsolutePath())) {
+			absPath = curFile.getAbsolutePath();
+			if(!isValidExtension(absPath)) {
+				invalidPath += absPath + System.getProperty("line.separator");
 				continue;
 			}
 			
-			pRes.choosedFilePathList.add(curFile.getAbsolutePath());
+			pRes.choosedFilePathList.add(absPath);
 			View.imgList.getItems().add(curFile.getName());
+		}
+		
+		if(!invalidPath.equals("")) {
+			Alert alert = new Alert(AlertType.ERROR);
+			alert.setTitle("Error");
+			alert.setHeaderText("추가하신 파일 중 사진 파일이 아닌 것이 포함되어있습니다.\n해당 파일은 추가될 수 없습니다.");
+			alert.setContentText(invalidPath);
+			alert.showAndWait();
 		}
 	}
 	
