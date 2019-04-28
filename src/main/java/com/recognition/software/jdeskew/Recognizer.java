@@ -180,6 +180,9 @@ public class Recognizer extends Application implements Initializable, EventInjec
 
 		View.imgList.getItems().remove(removeIdx);
 		pRes.choosedFilePathList.remove(removeIdx);
+		if(pRes.choosedFilePathList.size() == 0) {
+			View.imgView.setImage(null);
+		}
 
 		for (String curPath : pRes.choosedFilePathList) {
 			System.out.println(curPath);
@@ -217,7 +220,6 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	public void clickListMenu() {
 		int clickedIdx = View.imgList.getFocusModel().getFocusedIndex();
 		if (clickedIdx == -1) {
-			View.imgView.setImage(null);
 			return;
 		}
 
