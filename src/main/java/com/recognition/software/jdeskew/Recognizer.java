@@ -1,6 +1,8 @@
 package com.recognition.software.jdeskew;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -47,17 +50,24 @@ interface EventInjector {
 	public void clickRemoveBt();
 
 	public void clickStartBt();
+	
+	public void clickListMenu();
 }
 
 class ROIExtractor {
 	
-//	public boolean is
+	public int[] getRoiPoint(String filePath) {
+				
+		int[] roiPoint = new int[4];
+		return roiPoint;
+	}
 }
 
 class ValidExtensionChecker {
 
 	private String[] validExtension = {
-			"png", "jpg", "bmp", "jpeg"
+			"png", "jpg", "bmp", "jpeg",
+			"PNG", "JPG", "BMP", "JPEG"
 	};
 
 	public boolean isValidExtension(String absPath) {
@@ -91,9 +101,9 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
 
-	private Stage stage;
-	
 	private ValidExtensionChecker validExtensionChecker;
+	
+	private Stage stage;
 
 	@FXML
 	private ImageView imgView;
@@ -122,6 +132,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		View.addBt.setOnMouseClicked(event -> this.clickAddBt(stage));
 		View.removeBt.setOnMouseClicked(event -> this.clickRemoveBt());
 		View.startBt.setOnMouseClicked(event -> this.clickStartBt());
+		View.imgList.setOnMouseClicked(event -> this.clickListMenu());
 	}
 
 	@Override
@@ -172,11 +183,32 @@ public class Recognizer extends Application implements Initializable, EventInjec
 
 	@Override
 	public void clickStartBt() {
-
+		
+	}
+	
+	@Override
+	public void clickListMenu() {
+		int clickedIdx = View.imgList.getFocusModel().getFocusedIndex();
+		if(clickedIdx == -1) {
+			View.imgView.setImage(null);
+			return;
+		}
+		
+		String absPath = pRes.choosedFilePathList.get(clickedIdx);
+		Image image = null;
+		try {
+			image = new Image(new FileInputStream(absPath));
+		} catch (FileNotFoundException e) {
+			System.out.println("file not found");
+			return;
+		}
+		
+		View.imgView.setImage(image);
 	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		validExtensionChecker = new ValidExtensionChecker();
 		injectView();
 		injectEvent();
 	}
@@ -192,7 +224,6 @@ public class Recognizer extends Application implements Initializable, EventInjec
 
 		this.stage = primaryStage;
 		pRes.choosedFilePathList = new ArrayList<>();
-		validExtensionChecker = new ValidExtensionChecker();
 	}
 
 	public static void main(String[] args) {
