@@ -10,15 +10,12 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -167,7 +164,7 @@ class ROIExtractor {
 //			Imgproc.rectangle(rawImg, pureBoundRects[i], new Scalar(0, 0, 255), 2, 8, 0);
 		}
 //
-		final double paddingRatio = 0.2;
+		final double paddingRatio = 1;
 		double ltlx = maxCountRect.tl().x;
 		double ltly = maxCountRect.tl().y;
 		double lbrx = maxCountRect.br().x;
@@ -188,7 +185,9 @@ class ROIExtractor {
 			roiEndPoint = new Point(rbrx + widthVariation, rbry + heightVariation);
 		} else {
 			roiStartPoint = new Point(ltlx - widthVariation, rtly - heightVariation);
-			roiEndPoint = new Point(lbrx + widthVariation, rbry + heightVariation);
+			roiEndPoint = new Point(rbrx + widthVariation, lbry + heightVariation);
+
+			System.out.println("2");
 		}
 		
 		Rect roiRect = new Rect(roiStartPoint, roiEndPoint);
@@ -317,6 +316,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		pRes.choosedFilePathList.remove(removeIdx);
 		if (pRes.choosedFilePathList.size() == 0) {
 			View.imgView.setImage(null);
+			View.roiView.setImage(null);
 		}
 
 		for (String curPath : pRes.choosedFilePathList) {
@@ -333,9 +333,16 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					clickListMenu();
 					Mat curRawImg = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
 					Mat roi = roiExtractor.getROI(curRawImg);
-					View.roiView.setImage(null);
-					Imgcodecs.imwrite("tmp.jpg", roi);
-					File img = new File("tmp.jpg");
+					
+					String fileName = "tmp";
+					String roiPath = "tmp/" + fileName + ".jpg";
+					Imgcodecs.imwrite(roiPath, roi);
+					try {
+						View.roiView.setImage(new Image(new FileInputStream(roiPath)));
+					} catch (FileNotFoundException e1) {
+						e1.printStackTrace();
+					}
+					File img = new File(roiPath);
 					Platform.runLater(() -> {
 						try {
 							System.out.println(tesseract.doOCR(img));
@@ -346,7 +353,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					});
 
 					try {
-						Thread.sleep(1000);
+						Thread.sleep(2000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
