@@ -397,9 +397,9 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	}
 
 	public static void main(String[] args) {
-//		launch(args);
-		ROIExtractor roi = new ROIExtractor();
-		Mat mat = Imgcodecs.imread("testdata/wut.jpg", Imgcodecs.IMREAD_ANYCOLOR);
-		roi.getROI(mat);
+		launch(args);
+//		ROIExtractor roi = new ROIExtractor();
+//		Mat mat = Imgcodecs.imread("testdata/wut.jpg", Imgcodecs.IMREAD_ANYCOLOR);
+//		roi.getROI(mat);
 	}
 }

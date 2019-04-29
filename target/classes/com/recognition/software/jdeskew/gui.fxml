@@ -7,18 +7,18 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="342.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.recognition.software.jdeskew.Recognizer">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="553.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.recognition.software.jdeskew.Recognizer">
    <children>
-      <ImageView fx:id="imgView" fitHeight="311.0" fitWidth="356.0" layoutX="14.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
-      <ListView fx:id="imgList" layoutX="386.0" layoutY="14.0" prefHeight="172.0" prefWidth="200.0" />
-      <Button fx:id="addBt" layoutX="386.0" layoutY="197.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="91.0" text="사진추가" />
-      <Button fx:id="startBt" layoutX="385.0" layoutY="231.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="200.0" text="검출" />
-      <Label fx:id="resultLb" alignment="CENTER" layoutX="398.0" layoutY="266.0" prefHeight="65.0" prefWidth="175.0">
+      <ImageView fx:id="imgView" fitHeight="272.0" fitWidth="311.0" layoutX="14.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
+      <ListView fx:id="imgList" layoutX="339.0" layoutY="14.0" prefHeight="219.0" prefWidth="200.0" />
+      <Button fx:id="addBt" layoutX="340.0" layoutY="246.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="91.0" text="사진추가" />
+      <Button fx:id="startBt" layoutX="339.0" layoutY="280.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="200.0" text="검출" />
+      <Label fx:id="resultLb" alignment="CENTER" layoutX="341.0" layoutY="310.0" prefHeight="80.0" prefWidth="200.0">
          <font>
             <Font size="29.0" />
          </font>
       </Label>
-      <Button fx:id="removeBt" layoutX="493.0" layoutY="197.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="91.0" text="제거" />
+      <Button fx:id="removeBt" layoutX="447.0" layoutY="246.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="91.0" text="제거" />
+      <ImageView fx:id="roiView" fitHeight="94.0" fitWidth="311.0" layoutX="14.0" layoutY="292.0" pickOnBounds="true" preserveRatio="true" />
    </children>
 </AnchorPane>
