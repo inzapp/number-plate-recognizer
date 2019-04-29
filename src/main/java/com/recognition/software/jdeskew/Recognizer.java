@@ -123,6 +123,7 @@ class ROIExtractor {
 			double tolerance = curStdArea * toleranceAreaRatio;
 			double minArea = curStdArea - tolerance;
 			double maxArea = curStdArea + tolerance;
+			
 			for (int j = i + 1; j < pureBoundRects.length; ++j) {
 				deltaX = Math.abs(pureBoundRects[j].tl().x - pureBoundRects[i].tl().x);
 				if (150 < deltaX) {
@@ -166,18 +167,34 @@ class ROIExtractor {
 //			Imgproc.rectangle(rawImg, pureBoundRects[i], new Scalar(0, 0, 255), 2, 8, 0);
 		}
 //
-		final double paddingRatio = 0.1;
-		double width = endRectOfMaxCountRect.br().x - maxCountRect.tl().x;
-		double height = maxCountRect.tl().y - endRectOfMaxCountRect.br().y;
+		final double paddingRatio = 0.2;
+		double ltlx = maxCountRect.tl().x;
+		double ltly = maxCountRect.tl().y;
+		double lbrx = maxCountRect.br().x;
+		double lbry = maxCountRect.br().y;
+		double rtlx = endRectOfMaxCountRect.tl().x;
+		double rtly = endRectOfMaxCountRect.tl().y;
+		double rbrx = endRectOfMaxCountRect.br().x;
+		double rbry = endRectOfMaxCountRect.br().y;
+		double width = Math.abs(rbrx - ltlx);
+		double height = Math.abs(ltly - rbry);
 		double widthVariation = (width * paddingRatio) / 2;
 		double heightVariation = (height * paddingRatio) / 2;
-		Point roiStartPoint = new Point(maxCountRect.tl().x - widthVariation, maxCountRect.tl().y - heightVariation);
-		Point roiEndPoint = new Point(maxCountRect.br().x + widthVariation, maxCountRect.tl().y + heightVariation);
+
+		Point roiStartPoint = null;
+		Point roiEndPoint = null;
+		if(rtly <= ltly) {
+			roiStartPoint = new Point(ltlx - widthVariation, ltly - heightVariation);
+			roiEndPoint = new Point(rbrx + widthVariation, rbry + heightVariation);
+		} else {
+			roiStartPoint = new Point(ltlx - widthVariation, rtly - heightVariation);
+			roiEndPoint = new Point(lbrx + widthVariation, rbry + heightVariation);
+		}
+		
 		Rect roiRect = new Rect(roiStartPoint, roiEndPoint);
 		Mat roi = rawImg.submat(roiRect);
-
-		HighGui.imshow("img", roi);
-		HighGui.waitKey(0);	
+//		HighGui.imshow("img", roi);
+//		HighGui.waitKey(0);	
 		return roi;
 	}
 }
