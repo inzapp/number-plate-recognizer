@@ -11,6 +11,7 @@ import java.util.ResourceBundle;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
@@ -75,25 +76,30 @@ class ROIExtractor {
 		Imgproc.findContours(processed, contourList, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 		
 		int contourListSize = contourList.size();
-		MatOfPoint[] contourPoly = new MatOfPoint[contourListSize];
+		MatOfPoint2f[] contourPoly = new MatOfPoint2f[contourListSize];
 		Rect[] boundRect = new Rect[contourListSize];
 		Rect[] boundRect2 = new Rect[contourListSize];
 		
 		for(int i=0; i<contourListSize; ++i) {
-			contourPoly[i] = new MatOfPoint();
+			contourPoly[i] = new MatOfPoint2f();
 			boundRect[i] = new Rect();
 			boundRect2[i] = new Rect();
 		}
 		
 		double ratio = -1;
 		for(int i=0; i<contourList.size(); ++i) {
-//			Imgproc.approxPolyDP(contourList.get(i), contourPoly[i], 1, true);
+			Imgproc.approxPolyDP(new MatOfPoint2f(contourList.get(i).toArray()), contourPoly[i], 1, true);
 		}
 		
-		for(MatOfPoint curContour : contourList) {
-			double area = Imgproc.contourArea(curContour);
-			System.out.println(area);
+		for(int i=0; i<contourPoly.length; ++i) {
+			System.out.println(contourPoly[i].dump());
 		}
+		
+//		for(MatOfPoint curContour : contourList) {
+//			double area = Imgproc.contourArea(curContour);
+//			System.out.println(area);
+//		}
+		
 		HighGui.imshow("img", processed);
 		HighGui.waitKey(0);
 		Mat roi = new Mat();
@@ -292,8 +298,8 @@ public class Recognizer extends Application implements Initializable, EventInjec
 			new File("tmp").delete();
 			System.exit(0);
 		});
+		
 		primaryStage.show();
-
 		this.stage = primaryStage;
 		pRes.choosedFilePathList = new ArrayList<>();
 	}
@@ -301,7 +307,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	public static void main(String[] args) {
 //		launch(args);
 		ROIExtractor roi = new ROIExtractor();
-		Mat mat = Imgcodecs.imread("2323.jpg", Imgcodecs.IMREAD_ANYCOLOR);
+		Mat mat = Imgcodecs.imread("testdata/2323.jpg", Imgcodecs.IMREAD_ANYCOLOR);
 		roi.getROI(mat);
 	}
 }
