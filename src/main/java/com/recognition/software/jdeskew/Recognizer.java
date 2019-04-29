@@ -114,7 +114,7 @@ class ROIExtractor {
 		double deltaX = 0;
 		double deltaY = 0;
 		double gradient = 0;
-		double toleranceAreaRatio = 0.15;
+		final double toleranceAreaRatio = 0.25;
 		Rect maxCountRect = null;
 		Rect endRectOfMaxCountRect = null;
 		for (int i = 0; i < pureBoundRects.length; ++i) {
@@ -139,13 +139,13 @@ class ROIExtractor {
 				}
 
 				gradient = deltaY / deltaX;
-				System.out.println("gradient : " + gradient);
+//				System.out.println("gradient : " + gradient);
 				double curArea = pureBoundRects[j].area();
-				if (gradient < 0.25 && minArea <= curArea && curArea <= maxArea) {
+				if (gradient < 0.12 && minArea <= curArea && curArea <= maxArea) {
 					++curCount;
 					if (maxCount <= curCount) {
 						endRectOfMaxCountRect = pureBoundRects[j];
-						System.out.println("Bang!!!");
+//						System.out.println("Bang!!!");
 					}
 				}
 			}
@@ -155,21 +155,29 @@ class ROIExtractor {
 				maxCountRect = pureBoundRects[i];
 			}
 			
-			System.out.println("\n--------------------\n");
+//			System.out.println("\n--------------------\n");
 		}
 
-		Imgproc.rectangle(rawImg, maxCountRect, new Scalar(0, 255, 0), 2, 8, 0);
-		Imgproc.rectangle(rawImg, endRectOfMaxCountRect, new Scalar(0, 255, 0), 2, 8, 0);
+//		Imgproc.rectangle(rawImg, maxCountRect, new Scalar(0, 255, 0), 3, 8, 0);
+//		Imgproc.rectangle(rawImg, endRectOfMaxCountRect, new Scalar(0, 255, 0), 3, 8, 0);
 
-		Mat pan = new Mat(processed.rows(), processed.cols(), CvType.CV_8UC1);
 		for (int i = 0; i < pureBoundRects.length; ++i) {
 //			Imgproc.drawContours(rawImg, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
-			Imgproc.rectangle(rawImg, pureBoundRects[i], new Scalar(0, 0, 255), 2, 8, 0);
+//			Imgproc.rectangle(rawImg, pureBoundRects[i], new Scalar(0, 0, 255), 2, 8, 0);
 		}
+//
+		final double paddingRatio = 0.1;
+		double width = endRectOfMaxCountRect.br().x - maxCountRect.tl().x;
+		double height = maxCountRect.tl().y - endRectOfMaxCountRect.br().y;
+		double widthVariation = (width * paddingRatio) / 2;
+		double heightVariation = (height * paddingRatio) / 2;
+		Point roiStartPoint = new Point(maxCountRect.tl().x - widthVariation, maxCountRect.tl().y - heightVariation);
+		Point roiEndPoint = new Point(maxCountRect.br().x + widthVariation, maxCountRect.tl().y + heightVariation);
+		Rect roiRect = new Rect(roiStartPoint, roiEndPoint);
+		Mat roi = rawImg.submat(roiRect);
 
-		HighGui.imshow("img", rawImg);
-		HighGui.waitKey(0);
-		Mat roi = new Mat();
+		HighGui.imshow("img", roi);
+		HighGui.waitKey(0);	
 		return roi;
 	}
 }
@@ -304,8 +312,8 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					clickListMenu();
 					Mat curRawImg = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
 					Mat roi = roiExtractor.getROI(curRawImg);
-					Imgcodecs.imwrite("tmp", roi);
-					File img = new File("tmp");
+					Imgcodecs.imwrite("tmp.jpg", roi);
+					File img = new File("tmp.jpg");
 					Platform.runLater(() -> {
 						try {
 							System.out.println(tesseract.doOCR(img));
@@ -362,7 +370,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		primaryStage.setTitle("Number plate recognizer by inzapp");
 		primaryStage.setResizable(false);
 		primaryStage.setOnCloseRequest(event -> {
-			new File("tmp").delete();
+			new File("tmp.jpg").delete();
 			System.exit(0);
 		});
 
@@ -374,7 +382,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	public static void main(String[] args) {
 //		launch(args);
 		ROIExtractor roi = new ROIExtractor();
-		Mat mat = Imgcodecs.imread("testdata/aud.jpg", Imgcodecs.IMREAD_ANYCOLOR);
+		Mat mat = Imgcodecs.imread("testdata/wut.jpg", Imgcodecs.IMREAD_ANYCOLOR);
 		roi.getROI(mat);
 	}
 }
