@@ -105,14 +105,16 @@ class ROIExtractor {
 			}
 		}
 
-		Arrays.sort(pureBoundRects, (a, b) -> {
-			return Double.compare(a.tl().x, b.tl().x);
-		});
+//		Arrays.sort(pureBoundRects, (a, b) -> {
+//			return Double.compare(a.tl().x, b.tl().x);
+//		});
 
 		double deltaX = 0;
 		double deltaY = 0;
 		double gradient = 0;
 		int maxCount = 0;
+		Rect maxCountRect = null;
+		Rect endRectOfMaxCountRect = null;
 		for (int i = 0; i < pureCount; ++i) {
 			int curCount = 0;
 			for (int j = i + 1; j < pureCount; ++j) {
@@ -133,17 +135,26 @@ class ROIExtractor {
 				gradient = deltaY / deltaX;
 				System.out.println(gradient);
 				if(gradient < 0.25) {
-					++curCount;	
+					++curCount;
+					if(maxCount <= curCount) {
+						endRectOfMaxCountRect = pureBoundRects[j];	
+					}
 				}
 			}
-			
-			maxCount = curCount < maxCount ? maxCount : curCount;
+
+			if(maxCount < curCount) {
+				maxCount = curCount;
+				maxCountRect = pureBoundRects[i];
+			}
 		}
+
+		Imgproc.rectangle(rawImg, maxCountRect, new Scalar(255, 0, 0), 2, 8, 0);
+		Imgproc.rectangle(rawImg, endRectOfMaxCountRect, new Scalar(255, 0, 0), 2, 8, 0);
 
 		Mat pan = new Mat(processed.rows(), processed.cols(), CvType.CV_8UC1);
 		for (int i = 0; i < pureCount; ++i) {
 //			Imgproc.drawContours(rawImg, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
-			Imgproc.rectangle(rawImg, pureBoundRects[i].tl(), pureBoundRects[i].br(), new Scalar(255, 0, 0), 2, 8, 0);
+//			Imgproc.rectangle(rawImg, pureBoundRects[i].tl(), pureBoundRects[i].br(), new Scalar(255, 0, 0), 2, 8, 0);
 		}
 
 		HighGui.imshow("img", rawImg);
