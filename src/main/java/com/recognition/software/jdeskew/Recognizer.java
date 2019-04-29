@@ -96,10 +96,11 @@ class ROIExtractor {
 		int pureCount = 0;
 		for (int i = 0; i < contourListSize; ++i) {
 			ratio = (double) allBoundRects[i].height / allBoundRects[i].width;
-			if ((1.3 <= ratio) && (ratio <= 2.5) && (100 <= allBoundRects[i].area())
-					&& (allBoundRects[i].area() <= 1200)) {
-				pureBoundRects[pureCount] = allBoundRects[i];
-				++pureCount;
+			if ((1.3 <= ratio) && (ratio <= 2.5)) {
+				if ((100 <= allBoundRects[i].area()) && (allBoundRects[i].area() <= 1200)) {
+					pureBoundRects[pureCount] = allBoundRects[i];
+					++pureCount;
+				}
 			}
 		}
 
