@@ -77,60 +77,75 @@ class ROIExtractor {
 		Imgproc.Canny(processed, processed, 200, 300);
 		ArrayList<MatOfPoint> contourList = new ArrayList<>();
 		Imgproc.findContours(processed, contourList, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-		
+
 		int contourListSize = contourList.size();
 		MatOfPoint2f[] contourPoly = new MatOfPoint2f[contourListSize];
 		Rect[] allBoundRects = new Rect[contourListSize];
 		Rect[] pureBoundRects = new Rect[contourListSize];
-		
-		for(int i=0; i<contourListSize; ++i) {
+
+		for (int i = 0; i < contourListSize; ++i) {
 			contourPoly[i] = new MatOfPoint2f();
 			allBoundRects[i] = new Rect();
 			pureBoundRects[i] = new Rect();
 		}
-		
-		for(int i=0; i<contourListSize; ++i) {
+
+		for (int i = 0; i < contourListSize; ++i) {
 			Imgproc.approxPolyDP(new MatOfPoint2f(contourList.get(i).toArray()), contourPoly[i], 1, true);
 			allBoundRects[i] = Imgproc.boundingRect(contourPoly[i]);
 		}
 
 		double ratio = -1;
 		int pureCount = 0;
-		for(int i=0; i<contourListSize; ++i) {
+		for (int i = 0; i < contourListSize; ++i) {
 			ratio = (double) allBoundRects[i].height / allBoundRects[i].width;
-			if((1.3 <= ratio) && (ratio <= 2.5) && (100 <= allBoundRects[i].area()) && (allBoundRects[i].area() <= 1200)) {
+			if ((1.3 <= ratio) && (ratio <= 2.5) && (100 <= allBoundRects[i].area())
+					&& (allBoundRects[i].area() <= 1200)) {
 				pureBoundRects[pureCount] = allBoundRects[i];
 				++pureCount;
 			}
 		}
-		
-		Rect[] tempPureBoundRects = new Rect[pureCount];
-		for(int i=0; i<pureCount; ++i) {
-			tempPureBoundRects[i] = new Rect();
-			tempPureBoundRects[i] = pureBoundRects[i].clone();
-		}
-		
-		Arrays.sort(tempPureBoundRects, (a, b) -> {
+
+		Arrays.sort(pureBoundRects, (a, b) -> {
 			return Double.compare(a.tl().x, b.tl().x);
 		});
 
-		for(int i=0; i<pureCount / 5; ++i) {
-			for(int j=0; j<pureCount; ++j) {
-				if(tempPureBoundRects[i].tl().x == pureBoundRects[j].tl().x) {
-					if(tempPureBoundRects[i].tl().y == pureBoundRects[j].tl().y) {
-						
-						break;
-					}
+		double deltaX = 0;
+		double deltaY = 0;
+		double gradient = 0;
+		int maxCount = 0;
+		for (int i = 0; i < pureCount; ++i) {
+			int curCount = 0;
+			for (int j = i + 1; j < pureCount; ++j) {
+				deltaX = Math.abs(pureBoundRects[j].tl().x - pureBoundRects[i].tl().x);
+				if(150 < deltaX) {
+					break;
+				}
+				
+				deltaY = Math.abs(pureBoundRects[j].tl().y - pureBoundRects[i].tl().y);
+				if(deltaX == 0) {
+					deltaX = 1;
+				}
+				
+				if(deltaY == 0) {
+					deltaY = 1;
+				}
+				
+				gradient = deltaY / deltaX;
+				System.out.println(gradient);
+				if(gradient < 0.25) {
+					++curCount;	
 				}
 			}
+			
+			maxCount = curCount < maxCount ? maxCount : curCount;
 		}
-		
+
 		Mat pan = new Mat(processed.rows(), processed.cols(), CvType.CV_8UC1);
-		for(int i=0; i<pureCount; ++i) {
+		for (int i = 0; i < pureCount; ++i) {
 //			Imgproc.drawContours(rawImg, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
 			Imgproc.rectangle(rawImg, pureBoundRects[i].tl(), pureBoundRects[i].br(), new Scalar(255, 0, 0), 2, 8, 0);
 		}
-		
+
 		HighGui.imshow("img", rawImg);
 		HighGui.waitKey(0);
 		Mat roi = new Mat();
@@ -176,7 +191,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	private ValidExtensionChecker validExtensionChecker;
 
 	private ROIExtractor roiExtractor;
-	
+
 	private Tesseract tesseract;
 
 	private Stage stage;
@@ -250,7 +265,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 
 		View.imgList.getItems().remove(removeIdx);
 		pRes.choosedFilePathList.remove(removeIdx);
-		if(pRes.choosedFilePathList.size() == 0) {
+		if (pRes.choosedFilePathList.size() == 0) {
 			View.imgView.setImage(null);
 		}
 
@@ -263,7 +278,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	public void clickStartBt() {
 		Platform.runLater(() -> {
 			new Thread(() -> {
-				for(int i=0; i<pRes.choosedFilePathList.size(); ++i) {
+				for (int i = 0; i < pRes.choosedFilePathList.size(); ++i) {
 					View.imgList.getSelectionModel().select(i);
 					clickListMenu();
 					Mat curRawImg = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
@@ -278,7 +293,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 							e.printStackTrace();
 						}
 					});
-					
+
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
@@ -329,7 +344,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 			new File("tmp").delete();
 			System.exit(0);
 		});
-		
+
 		primaryStage.show();
 		this.stage = primaryStage;
 		pRes.choosedFilePathList = new ArrayList<>();
