@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -79,31 +80,41 @@ class ROIExtractor {
 		
 		int contourListSize = contourList.size();
 		MatOfPoint2f[] contourPoly = new MatOfPoint2f[contourListSize];
-		Rect[] boundRect = new Rect[contourListSize];
-		Rect[] boundRect2 = new Rect[contourListSize];
+		Rect[] allBoundRects = new Rect[contourListSize];
+		Rect[] pureBoundRects = new Rect[contourListSize];
 		
 		for(int i=0; i<contourListSize; ++i) {
 			contourPoly[i] = new MatOfPoint2f();
-			boundRect[i] = new Rect();
-			boundRect2[i] = new Rect();
+			allBoundRects[i] = new Rect();
+			pureBoundRects[i] = new Rect();
 		}
 		
-		for(int i=0; i<contourList.size(); ++i) {
+		for(int i=0; i<contourListSize; ++i) {
 			Imgproc.approxPolyDP(new MatOfPoint2f(contourList.get(i).toArray()), contourPoly[i], 1, true);
-			boundRect[i] = Imgproc.boundingRect(contourPoly[i]);
+			allBoundRects[i] = Imgproc.boundingRect(contourPoly[i]);
 		}
 
 		double ratio = -1;
-		for(int i=0; i<contourList.size(); ++i) {
-			ratio = (double) boundRect[i].height / boundRect[i].width;
-			if((0.5 <= ratio) && (ratio <= 2.5) && (100 <= boundRect[i].area()) && (boundRect[i].area() <= 700)) {
-				Imgproc.drawContours(processed, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
-				Imgproc.rectangle(processed, boundRect[i].tl(), boundRect[i].br(), new Scalar(160, 30, 20), 1, 8, 0);
+		int pureCount = 0;
+		for(int i=0; i<contourListSize; ++i) {
+			ratio = (double) allBoundRects[i].height / allBoundRects[i].width;
+			if((0.5 <= ratio) && (ratio <= 2.5) && (100 <= allBoundRects[i].area()) && (allBoundRects[i].area() <= 700)) {
+//				Imgproc.drawContours(processed, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
+//				Imgproc.rectangle(processed, allBoundRects[i].tl(), allBoundRects[i].br(), new Scalar(160, 30, 20), 1, 8, 0);
+				pureBoundRects[pureCount] = allBoundRects[i];
+				++pureCount;
 			}
 		}
 		
+		Mat pan = new Mat(processed.rows(), processed.cols(), CvType.CV_8UC1);
+		for(int i=0; i<pureCount; ++i) {
+//			Imgproc.drawContours(pan, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
+			Imgproc.rectangle(pan, pureBoundRects[i].tl(), pureBoundRects[i].br(), new Scalar(255, 0, 0), 1, 8, 0);
+		}
 		
-		HighGui.imshow("img", processed);
+		
+		
+		HighGui.imshow("img", pan);
 		HighGui.waitKey(0);
 		Mat roi = new Mat();
 		return roi;
@@ -310,7 +321,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	public static void main(String[] args) {
 //		launch(args);
 		ROIExtractor roi = new ROIExtractor();
-		Mat mat = Imgcodecs.imread("testdata/2323.jpg", Imgcodecs.IMREAD_ANYCOLOR);
+		Mat mat = Imgcodecs.imread("testdata/god.jpg", Imgcodecs.IMREAD_ANYCOLOR);
 		roi.getROI(mat);
 	}
 }
