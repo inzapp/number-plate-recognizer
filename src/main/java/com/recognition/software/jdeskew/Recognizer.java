@@ -48,7 +48,7 @@ abstract class pRes {
 
 abstract class View {
 
-	public static ImageView imgView;
+	public static ImageView imgView, roiView;
 	public static ListView<String> imgList;
 	public static Button addBt, removeBt, startBt;
 	public static Label resultLb;
@@ -244,6 +244,9 @@ public class Recognizer extends Application implements Initializable, EventInjec
 
 	@FXML
 	private ImageView imgView;
+	
+	@FXML
+	private ImageView roiView;
 
 	@FXML
 	private ListView<String> imgList;
@@ -257,6 +260,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	@Override
 	public void injectView() {
 		View.imgView = this.imgView;
+		View.roiView = this.roiView;
 		View.imgList = this.imgList;
 		View.addBt = this.addBt;
 		View.removeBt = this.removeBt;
@@ -329,6 +333,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					clickListMenu();
 					Mat curRawImg = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
 					Mat roi = roiExtractor.getROI(curRawImg);
+					View.roiView.setImage(null);
 					Imgcodecs.imwrite("tmp.jpg", roi);
 					File img = new File("tmp.jpg");
 					Platform.runLater(() -> {
