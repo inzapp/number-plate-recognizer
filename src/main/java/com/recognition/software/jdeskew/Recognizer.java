@@ -164,7 +164,8 @@ class ROIExtractor {
 //			Imgproc.rectangle(rawImg, pureBoundRects[i], new Scalar(0, 0, 255), 2, 8, 0);
 		}
 //
-		final double paddingRatio = 1;
+		final double widthPaddingRatio = 0.5;
+		final double heightPaddingRatio = 1;
 		double ltlx = maxCountRect.tl().x;
 		double ltly = maxCountRect.tl().y;
 		double lbrx = maxCountRect.br().x;
@@ -175,8 +176,8 @@ class ROIExtractor {
 		double rbry = endRectOfMaxCountRect.br().y;
 		double width = Math.abs(rbrx - ltlx);
 		double height = Math.abs(ltly - rbry);
-		double widthVariation = (width * paddingRatio) / 2;
-		double heightVariation = (height * paddingRatio) / 2;
+		double widthVariation = (width * widthPaddingRatio) / 2;
+		double heightVariation = (height * heightPaddingRatio) / 2;
 
 		Point roiStartPoint = null;
 		Point roiEndPoint = null;
@@ -186,8 +187,6 @@ class ROIExtractor {
 		} else {
 			roiStartPoint = new Point(ltlx - widthVariation, rtly - heightVariation);
 			roiEndPoint = new Point(rbrx + widthVariation, lbry + heightVariation);
-
-			System.out.println("2");
 		}
 		
 		Rect roiRect = new Rect(roiStartPoint, roiEndPoint);
@@ -334,6 +333,18 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					Mat curRawImg = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
 					Mat roi = roiExtractor.getROI(curRawImg);
 					
+					/**
+					 * 
+					 * 
+					 * 
+					 * 수정해야함
+					 * 
+					 * 
+					 * 
+					 * 
+					 * 
+					 * 
+					 */
 					String fileName = "tmp";
 					String roiPath = "tmp/" + fileName + ".jpg";
 					Imgcodecs.imwrite(roiPath, roi);
@@ -370,15 +381,19 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		}
 
 		String absPath = pRes.choosedFilePathList.get(clickedIdx);
+//		String roiPath = "tmp/" + getRoiName(absPath);
 		Image image = null;
+		Image roi = null;
 		try {
 			image = new Image(new FileInputStream(absPath));
+//			roi = new Image(new FileInputStream(roiPath));
 		} catch (FileNotFoundException e) {
 			System.out.println("file not found");
 			return;
 		}
 
 		View.imgView.setImage(image);
+//		View.roiView.setImage(roi);
 	}
 
 	@Override
