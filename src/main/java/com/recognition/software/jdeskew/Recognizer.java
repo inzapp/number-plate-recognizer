@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -79,19 +78,18 @@ class ROIExtractor {
 		Imgproc.findContours(processed, contourList, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
 		int contourListSize = contourList.size();
-		MatOfPoint2f[] contourPoly = new MatOfPoint2f[contourListSize];
 		Rect[] allBoundRects = new Rect[contourListSize];
 		Rect[] pureBoundRects = new Rect[contourListSize];
 
 		for (int i = 0; i < contourListSize; ++i) {
-			contourPoly[i] = new MatOfPoint2f();
 			allBoundRects[i] = new Rect();
 			pureBoundRects[i] = new Rect();
 		}
 
+		MatOfPoint2f curContourPoly = new MatOfPoint2f();
 		for (int i = 0; i < contourListSize; ++i) {
-			Imgproc.approxPolyDP(new MatOfPoint2f(contourList.get(i).toArray()), contourPoly[i], 1, true);
-			allBoundRects[i] = Imgproc.boundingRect(contourPoly[i]);
+			Imgproc.approxPolyDP(new MatOfPoint2f(contourList.get(i).toArray()), curContourPoly, 1, true);
+			allBoundRects[i] = Imgproc.boundingRect(curContourPoly);
 		}
 
 		double ratio = -1;
@@ -119,30 +117,30 @@ class ROIExtractor {
 			int curCount = 0;
 			for (int j = i + 1; j < pureCount; ++j) {
 				deltaX = Math.abs(pureBoundRects[j].tl().x - pureBoundRects[i].tl().x);
-				if(150 < deltaX) {
+				if (150 < deltaX) {
 					break;
 				}
-				
+
 				deltaY = Math.abs(pureBoundRects[j].tl().y - pureBoundRects[i].tl().y);
-				if(deltaX == 0) {
+				if (deltaX == 0) {
 					deltaX = 1;
 				}
-				
-				if(deltaY == 0) {
+
+				if (deltaY == 0) {
 					deltaY = 1;
 				}
-				
+
 				gradient = deltaY / deltaX;
 				System.out.println(gradient);
-				if(gradient < 0.25) {
+				if (gradient < 0.25) {
 					++curCount;
-					if(maxCount <= curCount) {
-						endRectOfMaxCountRect = pureBoundRects[j];	
+					if (maxCount <= curCount) {
+						endRectOfMaxCountRect = pureBoundRects[j];
 					}
 				}
 			}
 
-			if(maxCount < curCount) {
+			if (maxCount < curCount) {
 				maxCount = curCount;
 				maxCountRect = pureBoundRects[i];
 			}
@@ -364,7 +362,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	public static void main(String[] args) {
 //		launch(args);
 		ROIExtractor roi = new ROIExtractor();
-		Mat mat = Imgcodecs.imread("testdata/wut.jpg", Imgcodecs.IMREAD_ANYCOLOR);
+		Mat mat = Imgcodecs.imread("testdata/tfo.jpg", Imgcodecs.IMREAD_ANYCOLOR);
 		roi.getROI(mat);
 	}
 }
