@@ -12,7 +12,9 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -37,7 +39,7 @@ import javafx.stage.Stage;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 
-class pRes {
+abstract class pRes {
 
 	public static List<String> choosedFilePathList;
 }
@@ -86,19 +88,20 @@ class ROIExtractor {
 			boundRect2[i] = new Rect();
 		}
 		
-		double ratio = -1;
 		for(int i=0; i<contourList.size(); ++i) {
 			Imgproc.approxPolyDP(new MatOfPoint2f(contourList.get(i).toArray()), contourPoly[i], 1, true);
+			boundRect[i] = Imgproc.boundingRect(contourPoly[i]);
+		}
+
+		double ratio = -1;
+		for(int i=0; i<contourList.size(); ++i) {
+			ratio = (double) boundRect[i].height / boundRect[i].width;
+			if((0.5 <= ratio) && (ratio <= 2.5) && (100 <= boundRect[i].area()) && (boundRect[i].area() <= 700)) {
+				Imgproc.drawContours(processed, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
+				Imgproc.rectangle(processed, boundRect[i].tl(), boundRect[i].br(), new Scalar(160, 30, 20), 1, 8, 0);
+			}
 		}
 		
-		for(int i=0; i<contourPoly.length; ++i) {
-			System.out.println(contourPoly[i].dump());
-		}
-		
-//		for(MatOfPoint curContour : contourList) {
-//			double area = Imgproc.contourArea(curContour);
-//			System.out.println(area);
-//		}
 		
 		HighGui.imshow("img", processed);
 		HighGui.waitKey(0);
