@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -13,6 +14,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -96,27 +98,32 @@ class ROIExtractor {
 		int pureCount = 0;
 		for (int i = 0; i < contourListSize; ++i) {
 			ratio = (double) allBoundRects[i].height / allBoundRects[i].width;
-			if ((1.3 <= ratio) && (ratio <= 2.5)) {
-				if ((100 <= allBoundRects[i].area()) && (allBoundRects[i].area() <= 1200)) {
+			if ((0.5 <= ratio) && (ratio <= 2.5)) {
+				if ((150 <= allBoundRects[i].area()) && (allBoundRects[i].area() <= 1200)) {
 					pureBoundRects[pureCount] = allBoundRects[i];
 					++pureCount;
 				}
 			}
 		}
 
-//		Arrays.sort(pureBoundRects, (a, b) -> {
-//			return Double.compare(a.tl().x, b.tl().x);
-//		});
+		Arrays.sort(pureBoundRects, (a, b) -> {
+			return Double.compare(a.tl().x, b.tl().x);
+		});
 
+		int maxCount = 0;
 		double deltaX = 0;
 		double deltaY = 0;
 		double gradient = 0;
-		int maxCount = 0;
+		double toleranceAreaRatio = 0.15;
 		Rect maxCountRect = null;
 		Rect endRectOfMaxCountRect = null;
-		for (int i = 0; i < pureCount; ++i) {
+		for (int i = 0; i < pureBoundRects.length; ++i) {
 			int curCount = 0;
-			for (int j = i + 1; j < pureCount; ++j) {
+			double curStdArea = pureBoundRects[i].area();
+			double tolerance = curStdArea * toleranceAreaRatio;
+			double minArea = curStdArea - tolerance;
+			double maxArea = curStdArea + tolerance;
+			for (int j = i + 1; j < pureBoundRects.length; ++j) {
 				deltaX = Math.abs(pureBoundRects[j].tl().x - pureBoundRects[i].tl().x);
 				if (150 < deltaX) {
 					break;
@@ -132,11 +139,13 @@ class ROIExtractor {
 				}
 
 				gradient = deltaY / deltaX;
-				System.out.println(gradient);
-				if (gradient < 0.25) {
+				System.out.println("gradient : " + gradient);
+				double curArea = pureBoundRects[j].area();
+				if (gradient < 0.25 && minArea <= curArea && curArea <= maxArea) {
 					++curCount;
 					if (maxCount <= curCount) {
 						endRectOfMaxCountRect = pureBoundRects[j];
+						System.out.println("Bang!!!");
 					}
 				}
 			}
@@ -145,15 +154,17 @@ class ROIExtractor {
 				maxCount = curCount;
 				maxCountRect = pureBoundRects[i];
 			}
+			
+			System.out.println("\n--------------------\n");
 		}
 
-		Imgproc.rectangle(rawImg, maxCountRect, new Scalar(255, 0, 0), 2, 8, 0);
-		Imgproc.rectangle(rawImg, endRectOfMaxCountRect, new Scalar(255, 0, 0), 2, 8, 0);
+		Imgproc.rectangle(rawImg, maxCountRect, new Scalar(0, 255, 0), 2, 8, 0);
+		Imgproc.rectangle(rawImg, endRectOfMaxCountRect, new Scalar(0, 255, 0), 2, 8, 0);
 
 		Mat pan = new Mat(processed.rows(), processed.cols(), CvType.CV_8UC1);
-		for (int i = 0; i < pureCount; ++i) {
+		for (int i = 0; i < pureBoundRects.length; ++i) {
 //			Imgproc.drawContours(rawImg, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
-//			Imgproc.rectangle(rawImg, pureBoundRects[i].tl(), pureBoundRects[i].br(), new Scalar(255, 0, 0), 2, 8, 0);
+			Imgproc.rectangle(rawImg, pureBoundRects[i], new Scalar(0, 0, 255), 2, 8, 0);
 		}
 
 		HighGui.imshow("img", rawImg);
@@ -363,7 +374,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	public static void main(String[] args) {
 //		launch(args);
 		ROIExtractor roi = new ROIExtractor();
-		Mat mat = Imgcodecs.imread("testdata/tfo.jpg", Imgcodecs.IMREAD_ANYCOLOR);
+		Mat mat = Imgcodecs.imread("testdata/aud.jpg", Imgcodecs.IMREAD_ANYCOLOR);
 		roi.getROI(mat);
 	}
 }
