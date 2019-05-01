@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -17,7 +16,6 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -68,18 +66,13 @@ class ROIExtractor {
 		for (int i = 0; i < pureBoundRectList.size(); ++i) {
 			Imgproc.rectangle(view, pureBoundRectList.get(i), new Scalar(0, 255, 0), 1, 8, 0);
 		}
-		
+
 		Imgproc.cvtColor(raw, raw, Imgproc.COLOR_BGR2GRAY);
 		Rect[] cutPointRects = getCutPointRects(pureBoundRectList);
 		Rect roiRect = getRoiRect(cutPointRects);
 		Mat roi = raw.submat(roiRect);
 		view = view.submat(roiRect);
-
-//		HighGui.imshow("img", roi);
-//		HighGui.waitKey(0);
-//		Imgproc.rectangle(view, cutPointRects[0], new Scalar(0, 255, 0), 1, 8, 0);
-//		Imgproc.rectangle(view, cutPointRects[1], new Scalar(0, 255, 0), 1, 8, 0);
-		return new Mat[] {roi, view};
+		return new Mat[] { roi, view };
 	}
 
 	protected ArrayList<Rect> getPureBoundRectList(Mat raw) {
@@ -172,21 +165,12 @@ class ROIExtractor {
 	private Rect getRoiRect(Rect[] cutPointRects) {
 		Rect startRect = cutPointRects[0];
 		Rect endRect = cutPointRects[1];
-
-//		final double widthPaddingRatio = 0.3;
-//		final double heightPaddingRatio = 0.4;
-		final double widthPaddingRatio = 0;
-		final double heightPaddingRatio = 0.2;
 		double ltlx = startRect.tl().x;
 		double ltly = startRect.tl().y;
 		double lbry = startRect.br().y;
 		double rtly = endRect.tl().y;
 		double rbrx = endRect.br().x;
 		double rbry = endRect.br().y;
-		double width = Math.abs(rbrx - ltlx);
-		double height = Math.abs(ltly - rbry);
-//		double widthVariation = (width * widthPaddingRatio) / 2;
-//		double heightVariation = (height * heightPaddingRatio) / 2;
 		double widthVariation = 1;
 		double heightVariation = 1;
 
@@ -222,11 +206,11 @@ class OCRReader extends ROIExtractor {
 		} catch (TesseractException e) {
 			e.printStackTrace();
 		}
-		
+
 		String ocrResult = "";
 		char[] iso = tmpOcrResult.toCharArray();
-		for(char c : iso) {
-			if(isPlateResult(c)) {
+		for (char c : iso) {
+			if (isPlateResult(c)) {
 				ocrResult += c;
 			}
 		}
@@ -383,36 +367,21 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					clickListMenu();
 					Mat curRaw = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
 					Mat[] roi = roiExtractor.getROI(curRaw);
-
-					/**
-					 * 
-					 * 
-					 * 
-					 * 수정해야함
-					 * 
-					 * 
-					 * 
-					 * 
-					 * 
-					 * 
-					 */
-					String roiName = "tmp";
 					String viewName = "tmpView";
-					String roiPath = "tmp/" + roiName + ".jpg";
 					String viewPath = "tmp/" + viewName + ".jpg";
 					Imgcodecs.imwrite(viewPath, roi[1]);
 					try {
-						View.roiView.setImage(new Image(new FileInputStream(viewPath)));
+						Image image = new Image(new FileInputStream(viewPath));
+						View.roiView.setImage(image);
+						setImageCenter(View.roiView, image);
 					} catch (FileNotFoundException e1) {
 						e1.printStackTrace();
 					}
-					
+
 					Platform.runLater(() -> {
 						String ocrResult = ocrReader.getOcrResult(roi[0]);
 						System.out.println(ocrResult);
 						View.resultLb.setText(ocrResult);
-//							System.out.println(tesseract.doOCR(img));
-//							View.resultLb.setText(tesseract.doOCR(img));
 					});
 
 					try {
@@ -433,19 +402,35 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		}
 
 		String absPath = pRes.choosedFilePathList.get(clickedIdx);
-//		String roiPath = "tmp/" + getRoiName(absPath);
 		Image image = null;
-		Image roi = null;
 		try {
 			image = new Image(new FileInputStream(absPath));
-//			roi = new Image(new FileInputStream(roiPath));
+			View.imgList.scrollTo(clickedIdx);
 		} catch (FileNotFoundException e) {
 			System.out.println("file not found");
 			return;
 		}
 
 		View.imgView.setImage(image);
-//		View.roiView.setImage(roi);
+		setImageCenter(View.imgView, image);
+	}
+
+	private void setImageCenter(ImageView imageView, Image draggedImage) {
+		double ratioX = imageView.getFitWidth() / draggedImage.getWidth();
+		double ratioY = imageView.getFitHeight() / draggedImage.getHeight();
+
+		double reducCoeff;
+		if (ratioX >= ratioY) {
+			reducCoeff = ratioY;
+		} else {
+			reducCoeff = ratioX;
+		}
+
+		double w = draggedImage.getWidth() * reducCoeff;
+		double h = draggedImage.getHeight() * reducCoeff;
+
+		imageView.setX((imageView.getFitWidth() - w) / 2);
+		imageView.setY((imageView.getFitHeight() - h) / 2);
 	}
 
 	@Override
@@ -475,8 +460,5 @@ public class Recognizer extends Application implements Initializable, EventInjec
 
 	public static void main(String[] args) {
 		launch(args);
-//		ROIExtractor roi = new ROIExtractor();
-//		Mat mat = Imgcodecs.imread("testdata/wut.jpg", Imgcodecs.IMREAD_ANYCOLOR);
-//		roi.getROI(mat);
 	}
 }
