@@ -62,24 +62,27 @@ interface EventInjector {
 
 class ROIExtractor {
 
-	public Mat getROI(Mat raw) {
+	public Mat[] getROI(Mat raw) {
 		ArrayList<Rect> pureBoundRectList = getPureBoundRectList(raw);
+		Mat view = raw.clone();
+		for (int i = 0; i < pureBoundRectList.size(); ++i) {
+			Imgproc.rectangle(view, pureBoundRectList.get(i), new Scalar(0, 255, 0), 1, 8, 0);
+		}
+		
+		Imgproc.cvtColor(raw, raw, Imgproc.COLOR_BGR2GRAY);
 		Rect[] cutPointRects = getCutPointRects(pureBoundRectList);
 		Rect roiRect = getRoiRect(cutPointRects);
 		Mat roi = raw.submat(roiRect);
-		for (int i = 0; i < pureBoundRectList.size(); ++i) {
-//			Imgproc.drawContours(rawImg, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
-//			Imgproc.rectangle(raw, pureBoundRectList.get(i), new Scalar(0, 0, 255), 2, 8, 0);
-		}
-		
+		view = view.submat(roiRect);
+
 //		HighGui.imshow("img", roi);
-//		HighGui.waitKey(0);	
-//		Imgproc.rectangle(raw, cutPointRects[0], new Scalar(0, 255, 0), 3, 8, 0);
-//		Imgproc.rectangle(raw, cutPointRects[1], new Scalar(0, 255, 0), 3, 8, 0);
-		return roi;
+//		HighGui.waitKey(0);
+//		Imgproc.rectangle(view, cutPointRects[0], new Scalar(0, 255, 0), 1, 8, 0);
+//		Imgproc.rectangle(view, cutPointRects[1], new Scalar(0, 255, 0), 1, 8, 0);
+		return new Mat[] {roi, view};
 	}
 
-	private ArrayList<Rect> getPureBoundRectList(Mat raw) {
+	protected ArrayList<Rect> getPureBoundRectList(Mat raw) {
 		Mat processed = new Mat();
 		Imgproc.blur(raw, processed, new Size(2, 2));
 		Imgproc.cvtColor(processed, processed, Imgproc.COLOR_BGR2GRAY);
@@ -170,8 +173,10 @@ class ROIExtractor {
 		Rect startRect = cutPointRects[0];
 		Rect endRect = cutPointRects[1];
 
-		final double widthPaddingRatio = 0.5;
-		final double heightPaddingRatio = 1;
+//		final double widthPaddingRatio = 0.3;
+//		final double heightPaddingRatio = 0.4;
+		final double widthPaddingRatio = 0;
+		final double heightPaddingRatio = 0;
 		double ltlx = startRect.tl().x;
 		double ltly = startRect.tl().y;
 		double lbry = startRect.br().y;
@@ -180,8 +185,10 @@ class ROIExtractor {
 		double rbry = endRect.br().y;
 		double width = Math.abs(rbrx - ltlx);
 		double height = Math.abs(ltly - rbry);
-		double widthVariation = (width * widthPaddingRatio) / 2;
-		double heightVariation = (height * heightPaddingRatio) / 2;
+//		double widthVariation = (width * widthPaddingRatio) / 2;
+//		double heightVariation = (height * heightPaddingRatio) / 2;
+		double widthVariation = 1;
+		double heightVariation = 1;
 
 		Point roiStartPoint = null;
 		Point roiEndPoint = null;
@@ -197,10 +204,10 @@ class ROIExtractor {
 	}
 }
 
-class OCRReader {
-	
+class OCRReader extends ROIExtractor {
+
 	private Tesseract tesseract;
-	
+
 	public OCRReader() {
 		tesseract = new Tesseract();
 		tesseract.setDatapath("src/main/resources/tessdata");
@@ -208,8 +215,27 @@ class OCRReader {
 	}
 
 	public String getOcrResult(Mat roi) {
-		String result = "test";
-		return result;
+		Imgcodecs.imwrite("tmp.jpg", roi);
+		String tmpOcrResult = "";
+		try {
+			tmpOcrResult = tesseract.doOCR(new File("tmp.jpg"));
+		} catch (TesseractException e) {
+			e.printStackTrace();
+		}
+		
+		String ocrResult = "";
+		char[] iso = tmpOcrResult.toCharArray();
+		for(char c : iso) {
+			if(isPlateResult(c)) {
+				ocrResult += c;
+			}
+		}
+
+		return ocrResult;
+	}
+
+	private boolean isPlateResult(char c) {
+		return ('0' <= c && c <= '9') || ('A' <= c && c <= 'Z');
 	}
 }
 
@@ -259,10 +285,8 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	private ValidExtensionChecker validExtensionChecker;
 
 	private ROIExtractor roiExtractor;
-	
-	private OCRReader ocrReader;
 
-//	private Tesseract tesseract;
+	private OCRReader ocrReader;
 
 	private Stage stage;
 
@@ -358,7 +382,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					View.imgList.getSelectionModel().select(i);
 					clickListMenu();
 					Mat curRaw = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
-					Mat roi = roiExtractor.getROI(curRaw);
+					Mat[] roi = roiExtractor.getROI(curRaw);
 
 					/**
 					 * 
@@ -372,17 +396,19 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					 * 
 					 * 
 					 */
-					String fileName = "tmp";
-					String roiPath = "tmp/" + fileName + ".jpg";
-					Imgcodecs.imwrite(roiPath, roi);
+					String roiName = "tmp";
+					String viewName = "tmpView";
+					String roiPath = "tmp/" + roiName + ".jpg";
+					String viewPath = "tmp/" + viewName + ".jpg";
+					Imgcodecs.imwrite(viewPath, roi[1]);
 					try {
-						View.roiView.setImage(new Image(new FileInputStream(roiPath)));
+						View.roiView.setImage(new Image(new FileInputStream(viewPath)));
 					} catch (FileNotFoundException e1) {
 						e1.printStackTrace();
 					}
-					File img = new File(roiPath);
+					
 					Platform.runLater(() -> {
-						String ocrResult = ocrReader.getOcrResult(roi);
+						String ocrResult = ocrReader.getOcrResult(roi[0]);
 						System.out.println(ocrResult);
 						View.resultLb.setText(ocrResult);
 //							System.out.println(tesseract.doOCR(img));
@@ -427,9 +453,6 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		validExtensionChecker = new ValidExtensionChecker();
 		roiExtractor = new ROIExtractor();
 		ocrReader = new OCRReader();
-//		tesseract = new Tesseract();
-//		tesseract.setDatapath("src/main/resources/tessdata");
-//		tesseract.setLanguage("eng");
 		injectView();
 		injectEvent();
 	}
