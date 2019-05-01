@@ -61,22 +61,24 @@ interface EventInjector {
 }
 
 class ROIExtractor {
-	
+
 	public Mat getROI(Mat raw) {
 		ArrayList<Rect> pureBoundRectList = getPureBoundRectList(raw);
 		Rect[] cutPointRects = getCutPointRects(pureBoundRectList);
+		Rect roiRect = getRoiRect(cutPointRects);
+		Mat roi = raw.submat(roiRect);
 		for (int i = 0; i < pureBoundRectList.size(); ++i) {
 //			Imgproc.drawContours(rawImg, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
 //			Imgproc.rectangle(raw, pureBoundRectList.get(i), new Scalar(0, 0, 255), 2, 8, 0);
 		}
 		
-		Rect roiRect = getRoiRect(cutPointRects);
-		Mat roi = raw.submat(roiRect);
 //		HighGui.imshow("img", roi);
 //		HighGui.waitKey(0);	
+//		Imgproc.rectangle(raw, cutPointRects[0], new Scalar(0, 255, 0), 3, 8, 0);
+//		Imgproc.rectangle(raw, cutPointRects[1], new Scalar(0, 255, 0), 3, 8, 0);
 		return roi;
 	}
-	
+
 	private ArrayList<Rect> getPureBoundRectList(Mat raw) {
 		Mat processed = new Mat();
 		Imgproc.blur(raw, processed, new Size(2, 2));
@@ -87,13 +89,11 @@ class ROIExtractor {
 
 		int contourListSize = contourList.size();
 		Rect[] allBoundRects = new Rect[contourListSize];
-		
-		ArrayList<Rect> pureBoundRectList = new ArrayList<>();
-
 		for (int i = 0; i < contourListSize; ++i) {
 			allBoundRects[i] = new Rect();
 		}
 
+		ArrayList<Rect> pureBoundRectList = new ArrayList<>();
 		MatOfPoint2f curContourPoly = new MatOfPoint2f();
 		for (int i = 0; i < contourListSize; ++i) {
 			Imgproc.approxPolyDP(new MatOfPoint2f(contourList.get(i).toArray()), curContourPoly, 1, true);
@@ -109,10 +109,10 @@ class ROIExtractor {
 				}
 			}
 		}
-		
+
 		return pureBoundRectList;
 	}
-	
+
 	private Rect[] getCutPointRects(ArrayList<Rect> pureBoundRectList) {
 		pureBoundRectList.sort((prev, next) -> {
 			return Double.compare(prev.tl().x, next.tl().x);
@@ -131,7 +131,7 @@ class ROIExtractor {
 			double tolerance = curStdArea * toleranceAreaRatio;
 			double minArea = curStdArea - tolerance;
 			double maxArea = curStdArea + tolerance;
-			
+
 			for (int j = i + 1; j < pureBoundRectList.size(); ++j) {
 				deltaX = Math.abs(pureBoundRectList.get(j).tl().x - pureBoundRectList.get(i).tl().x);
 				if (150 < deltaX) {
@@ -148,13 +148,11 @@ class ROIExtractor {
 				}
 
 				gradient = deltaY / deltaX;
-//				System.out.println("gradient : " + gradient);
 				double curArea = pureBoundRectList.get(j).area();
 				if (gradient < 0.12 && minArea <= curArea && curArea <= maxArea) {
 					++curCount;
 					if (maxCount <= curCount) {
 						endRectOfMaxCountRect = pureBoundRectList.get(j);
-//						System.out.println("Bang!!!");
 					}
 				}
 			}
@@ -163,27 +161,20 @@ class ROIExtractor {
 				maxCount = curCount;
 				maxCountRect = pureBoundRectList.get(i);
 			}
-			
-//			System.out.println("\n--------------------\n");
 		}
 
-		return new Rect[]{maxCountRect, endRectOfMaxCountRect};
+		return new Rect[] { maxCountRect, endRectOfMaxCountRect };
 	}
-	
+
 	private Rect getRoiRect(Rect[] cutPointRects) {
 		Rect startRect = cutPointRects[0];
 		Rect endRect = cutPointRects[1];
 
-//		Imgproc.rectangle(raw, startRect, new Scalar(0, 255, 0), 3, 8, 0);
-//		Imgproc.rectangle(raw, endRect, new Scalar(0, 255, 0), 3, 8, 0);
-		
 		final double widthPaddingRatio = 0.5;
 		final double heightPaddingRatio = 1;
 		double ltlx = startRect.tl().x;
 		double ltly = startRect.tl().y;
-//		double lbrx = maxCountRect.br().x;
 		double lbry = startRect.br().y;
-//		double rtlx = endRectOfMaxCountRect.tl().x;
 		double rtly = endRect.tl().y;
 		double rbrx = endRect.br().x;
 		double rbry = endRect.br().y;
@@ -194,34 +185,31 @@ class ROIExtractor {
 
 		Point roiStartPoint = null;
 		Point roiEndPoint = null;
-		if(rtly <= ltly) {
+		if (rtly <= ltly) {
 			roiStartPoint = new Point(ltlx - widthVariation, rtly - heightVariation);
 			roiEndPoint = new Point(rbrx + widthVariation, lbry + heightVariation);
 		} else {
 			roiStartPoint = new Point(ltlx - widthVariation, ltly - heightVariation);
 			roiEndPoint = new Point(rbrx + widthVariation, rbry + heightVariation);
 		}
-		
+
 		return new Rect(roiStartPoint, roiEndPoint);
 	}
 }
 
 class OCRReader {
 	
-	private Mat raw;
-	private Rect roi;
+	private Tesseract tesseract;
 	
-	public OCRReader (Mat raw, Rect roi) {
-		this.roi = roi;
+	public OCRReader() {
+		tesseract = new Tesseract();
+		tesseract.setDatapath("src/main/resources/tessdata");
+		tesseract.setLanguage("eng");
 	}
-	
-	public String getOcrResult() {
-		String result = "";
+
+	public String getOcrResult(Mat roi) {
+		String result = "test";
 		return result;
-	}
-	
-	public Mat getRoiMat() {
-		return this.raw.submat(this.roi);
 	}
 }
 
@@ -271,14 +259,16 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	private ValidExtensionChecker validExtensionChecker;
 
 	private ROIExtractor roiExtractor;
+	
+	private OCRReader ocrReader;
 
-	private Tesseract tesseract;
+//	private Tesseract tesseract;
 
 	private Stage stage;
 
 	@FXML
 	private ImageView imgView;
-	
+
 	@FXML
 	private ImageView roiView;
 
@@ -369,7 +359,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					clickListMenu();
 					Mat curRaw = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
 					Mat roi = roiExtractor.getROI(curRaw);
-					
+
 					/**
 					 * 
 					 * 
@@ -392,12 +382,11 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					}
 					File img = new File(roiPath);
 					Platform.runLater(() -> {
-						try {
-							System.out.println(tesseract.doOCR(img));
-							View.resultLb.setText(tesseract.doOCR(img));
-						} catch (TesseractException e) {
-							e.printStackTrace();
-						}
+						String ocrResult = ocrReader.getOcrResult(roi);
+						System.out.println(ocrResult);
+						View.resultLb.setText(ocrResult);
+//							System.out.println(tesseract.doOCR(img));
+//							View.resultLb.setText(tesseract.doOCR(img));
 					});
 
 					try {
@@ -437,9 +426,10 @@ public class Recognizer extends Application implements Initializable, EventInjec
 	public void initialize(URL location, ResourceBundle resources) {
 		validExtensionChecker = new ValidExtensionChecker();
 		roiExtractor = new ROIExtractor();
-		tesseract = new Tesseract();
-		tesseract.setDatapath("src/main/resources/tessdata");
-		tesseract.setLanguage("eng");
+		ocrReader = new OCRReader();
+//		tesseract = new Tesseract();
+//		tesseract.setDatapath("src/main/resources/tessdata");
+//		tesseract.setLanguage("eng");
 		injectView();
 		injectEvent();
 	}
