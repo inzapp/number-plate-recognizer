@@ -43,14 +43,6 @@ abstract class pRes {
 	public static List<String> choosedFilePathList;
 }
 
-abstract class View {
-
-	public static ImageView imgView, roiView;
-	public static ListView<String> imgList;
-	public static Button addBt, removeBt, startBt;
-	public static Label resultLb;
-}
-
 interface EventInjector {
 
 	public void injectView();
@@ -226,6 +218,14 @@ class ValidExtensionChecker {
 	}
 }
 
+abstract class View {
+
+	public static ImageView imgView, roiView;
+	public static ListView<String> imgList;
+	public static Button addBt, removeBt, startBt;
+	public static Label resultLb;
+}
+
 public class Recognizer extends Application implements Initializable, EventInjector {
 
 	static {
@@ -316,6 +316,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 		if (pRes.choosedFilePathList.size() == 0) {
 			View.imgView.setImage(null);
 			View.roiView.setImage(null);
+			View.resultLb.setText(null);
 		}
 
 		for (String curPath : pRes.choosedFilePathList) {
