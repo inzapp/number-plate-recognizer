@@ -62,9 +62,24 @@ interface EventInjector {
 
 class ROIExtractor {
 	
-	public Mat getROI(Mat rawImg) {
+	public Mat getROI(Mat raw) {
+		ArrayList<Rect> pureBoundRectList = getPureBoundRectList(raw);
+		Rect[] cutPointRects = getCutPointRects(pureBoundRectList);
+		for (int i = 0; i < pureBoundRectList.size(); ++i) {
+//			Imgproc.drawContours(rawImg, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
+//			Imgproc.rectangle(raw, pureBoundRectList.get(i), new Scalar(0, 0, 255), 2, 8, 0);
+		}
+		
+		Rect roiRect = getRoiRect(cutPointRects);
+		Mat roi = raw.submat(roiRect);
+//		HighGui.imshow("img", roi);
+//		HighGui.waitKey(0);	
+		return roi;
+	}
+	
+	private ArrayList<Rect> getPureBoundRectList(Mat raw) {
 		Mat processed = new Mat();
-		Imgproc.blur(rawImg, processed, new Size(2, 2));
+		Imgproc.blur(raw, processed, new Size(2, 2));
 		Imgproc.cvtColor(processed, processed, Imgproc.COLOR_BGR2GRAY);
 		Imgproc.Canny(processed, processed, 200, 300);
 		ArrayList<MatOfPoint> contourList = new ArrayList<>();
@@ -72,13 +87,11 @@ class ROIExtractor {
 
 		int contourListSize = contourList.size();
 		Rect[] allBoundRects = new Rect[contourListSize];
-//		Rect[] pureBoundRects = new Rect[contourListSize];
 		
 		ArrayList<Rect> pureBoundRectList = new ArrayList<>();
 
 		for (int i = 0; i < contourListSize; ++i) {
 			allBoundRects[i] = new Rect();
-//			pureBoundRects[i] = new Rect();
 		}
 
 		MatOfPoint2f curContourPoly = new MatOfPoint2f();
@@ -88,31 +101,19 @@ class ROIExtractor {
 		}
 
 		double ratio = -1;
-//		int pureCount = 0;
 		for (int i = 0; i < contourListSize; ++i) {
 			ratio = (double) allBoundRects[i].height / allBoundRects[i].width;
 			if ((0.5 <= ratio) && (ratio <= 2.5)) {
 				if ((150 <= allBoundRects[i].area()) && (allBoundRects[i].area() <= 1200)) {
-//					pureBoundRects[pureCount] = allBoundRects[i];
-//					++pureCount;
-					
-					
-					
-					/**
-					 * 
-					 * 
-					 * 
-					 * 
-					 */
 					pureBoundRectList.add(allBoundRects[i]);
 				}
 			}
 		}
-
-//		Arrays.sort(pureBoundRects, (a, b) -> {
-//			return Double.compare(a.tl().x, b.tl().x);
-//		});
 		
+		return pureBoundRectList;
+	}
+	
+	private Rect[] getCutPointRects(ArrayList<Rect> pureBoundRectList) {
 		pureBoundRectList.sort((prev, next) -> {
 			return Double.compare(prev.tl().x, next.tl().x);
 		});
@@ -166,26 +167,26 @@ class ROIExtractor {
 //			System.out.println("\n--------------------\n");
 		}
 
-//		Imgproc.rectangle(rawImg, maxCountRect, new Scalar(0, 255, 0), 3, 8, 0);
-//		Imgproc.rectangle(rawImg, endRectOfMaxCountRect, new Scalar(0, 255, 0), 3, 8, 0);
+		return new Rect[]{maxCountRect, endRectOfMaxCountRect};
+	}
+	
+	private Rect getRoiRect(Rect[] cutPointRects) {
+		Rect startRect = cutPointRects[0];
+		Rect endRect = cutPointRects[1];
 
-		for (int i = 0; i < pureBoundRectList.size(); ++i) {
-//			Imgproc.drawContours(rawImg, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
-//			Imgproc.rectangle(rawImg, pureBoundRectList.get(i), new Scalar(0, 0, 255), 2, 8, 0);
-		}
+//		Imgproc.rectangle(raw, startRect, new Scalar(0, 255, 0), 3, 8, 0);
+//		Imgproc.rectangle(raw, endRect, new Scalar(0, 255, 0), 3, 8, 0);
 		
-//		HighGui.imshow("processed", rawImg);
-//
 		final double widthPaddingRatio = 0.5;
 		final double heightPaddingRatio = 1;
-		double ltlx = maxCountRect.tl().x;
-		double ltly = maxCountRect.tl().y;
+		double ltlx = startRect.tl().x;
+		double ltly = startRect.tl().y;
 //		double lbrx = maxCountRect.br().x;
-		double lbry = maxCountRect.br().y;
+		double lbry = startRect.br().y;
 //		double rtlx = endRectOfMaxCountRect.tl().x;
-		double rtly = endRectOfMaxCountRect.tl().y;
-		double rbrx = endRectOfMaxCountRect.br().x;
-		double rbry = endRectOfMaxCountRect.br().y;
+		double rtly = endRect.tl().y;
+		double rbrx = endRect.br().x;
+		double rbry = endRect.br().y;
 		double width = Math.abs(rbrx - ltlx);
 		double height = Math.abs(ltly - rbry);
 		double widthVariation = (width * widthPaddingRatio) / 2;
@@ -201,11 +202,7 @@ class ROIExtractor {
 			roiEndPoint = new Point(rbrx + widthVariation, rbry + heightVariation);
 		}
 		
-		Rect roiRect = new Rect(roiStartPoint, roiEndPoint);
-		Mat roi = rawImg.submat(roiRect);
-//		HighGui.imshow("img", roi);
-//		HighGui.waitKey(0);	
-		return roi;
+		return new Rect(roiStartPoint, roiEndPoint);
 	}
 }
 
@@ -370,8 +367,8 @@ public class Recognizer extends Application implements Initializable, EventInjec
 				for (int i = 0; i < pRes.choosedFilePathList.size(); ++i) {
 					View.imgList.getSelectionModel().select(i);
 					clickListMenu();
-					Mat curRawImg = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
-					Mat roi = roiExtractor.getROI(curRawImg);
+					Mat curRaw = Imgcodecs.imread(pRes.choosedFilePathList.get(i));
+					Mat roi = roiExtractor.getROI(curRaw);
 					
 					/**
 					 * 
