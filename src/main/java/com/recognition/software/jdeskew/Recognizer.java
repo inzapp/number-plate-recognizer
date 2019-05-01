@@ -176,7 +176,7 @@ class ROIExtractor {
 //		final double widthPaddingRatio = 0.3;
 //		final double heightPaddingRatio = 0.4;
 		final double widthPaddingRatio = 0;
-		final double heightPaddingRatio = 0;
+		final double heightPaddingRatio = 0.2;
 		double ltlx = startRect.tl().x;
 		double ltly = startRect.tl().y;
 		double lbry = startRect.br().y;
