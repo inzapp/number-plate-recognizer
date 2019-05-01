@@ -15,7 +15,9 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -59,7 +61,7 @@ interface EventInjector {
 }
 
 class ROIExtractor {
-
+	
 	public Mat getROI(Mat rawImg) {
 		Mat processed = new Mat();
 		Imgproc.blur(rawImg, processed, new Size(2, 2));
@@ -155,14 +157,16 @@ class ROIExtractor {
 //			Imgproc.drawContours(rawImg, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
 //			Imgproc.rectangle(rawImg, pureBoundRects[i], new Scalar(0, 0, 255), 2, 8, 0);
 		}
+		
+//		HighGui.imshow("processed", rawImg);
 //
 		final double widthPaddingRatio = 0.5;
 		final double heightPaddingRatio = 1;
 		double ltlx = maxCountRect.tl().x;
 		double ltly = maxCountRect.tl().y;
-		double lbrx = maxCountRect.br().x;
+//		double lbrx = maxCountRect.br().x;
 		double lbry = maxCountRect.br().y;
-		double rtlx = endRectOfMaxCountRect.tl().x;
+//		double rtlx = endRectOfMaxCountRect.tl().x;
 		double rtly = endRectOfMaxCountRect.tl().y;
 		double rbrx = endRectOfMaxCountRect.br().x;
 		double rbry = endRectOfMaxCountRect.br().y;
@@ -174,11 +178,12 @@ class ROIExtractor {
 		Point roiStartPoint = null;
 		Point roiEndPoint = null;
 		if(rtly <= ltly) {
-			roiStartPoint = new Point(ltlx - widthVariation, ltly - heightVariation);
-			roiEndPoint = new Point(rbrx + widthVariation, rbry + heightVariation);
-		} else {
+
 			roiStartPoint = new Point(ltlx - widthVariation, rtly - heightVariation);
 			roiEndPoint = new Point(rbrx + widthVariation, lbry + heightVariation);
+		} else {
+			roiStartPoint = new Point(ltlx - widthVariation, ltly - heightVariation);
+			roiEndPoint = new Point(rbrx + widthVariation, rbry + heightVariation);
 		}
 		
 		Rect roiRect = new Rect(roiStartPoint, roiEndPoint);
@@ -186,6 +191,25 @@ class ROIExtractor {
 //		HighGui.imshow("img", roi);
 //		HighGui.waitKey(0);	
 		return roi;
+	}
+}
+
+class OCRReader {
+	
+	private Mat raw;
+	private Rect roi;
+	
+	public OCRReader (Mat raw, Rect roi) {
+		this.roi = roi;
+	}
+	
+	public String getOcrResult() {
+		String result = "";
+		return result;
+	}
+	
+	public Mat getRoiMat() {
+		return this.raw.submat(this.roi);
 	}
 }
 
