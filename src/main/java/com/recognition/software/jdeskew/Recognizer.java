@@ -372,6 +372,7 @@ public class Recognizer extends Application implements Initializable, EventInjec
 					Imgcodecs.imwrite(viewPath, roi[1]);
 					try {
 						Image image = new Image(new FileInputStream(viewPath));
+						View.roiView.setImage(null);
 						View.roiView.setImage(image);
 						setImageCenter(View.roiView, image);
 					} catch (FileNotFoundException e1) {
