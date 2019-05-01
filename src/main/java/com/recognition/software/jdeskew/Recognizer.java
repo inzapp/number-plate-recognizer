@@ -72,11 +72,13 @@ class ROIExtractor {
 
 		int contourListSize = contourList.size();
 		Rect[] allBoundRects = new Rect[contourListSize];
-		Rect[] pureBoundRects = new Rect[contourListSize];
+//		Rect[] pureBoundRects = new Rect[contourListSize];
+		
+		ArrayList<Rect> pureBoundRectList = new ArrayList<>();
 
 		for (int i = 0; i < contourListSize; ++i) {
 			allBoundRects[i] = new Rect();
-			pureBoundRects[i] = new Rect();
+//			pureBoundRects[i] = new Rect();
 		}
 
 		MatOfPoint2f curContourPoly = new MatOfPoint2f();
@@ -86,19 +88,33 @@ class ROIExtractor {
 		}
 
 		double ratio = -1;
-		int pureCount = 0;
+//		int pureCount = 0;
 		for (int i = 0; i < contourListSize; ++i) {
 			ratio = (double) allBoundRects[i].height / allBoundRects[i].width;
 			if ((0.5 <= ratio) && (ratio <= 2.5)) {
 				if ((150 <= allBoundRects[i].area()) && (allBoundRects[i].area() <= 1200)) {
-					pureBoundRects[pureCount] = allBoundRects[i];
-					++pureCount;
+//					pureBoundRects[pureCount] = allBoundRects[i];
+//					++pureCount;
+					
+					
+					
+					/**
+					 * 
+					 * 
+					 * 
+					 * 
+					 */
+					pureBoundRectList.add(allBoundRects[i]);
 				}
 			}
 		}
 
-		Arrays.sort(pureBoundRects, (a, b) -> {
-			return Double.compare(a.tl().x, b.tl().x);
+//		Arrays.sort(pureBoundRects, (a, b) -> {
+//			return Double.compare(a.tl().x, b.tl().x);
+//		});
+		
+		pureBoundRectList.sort((prev, next) -> {
+			return Double.compare(prev.tl().x, next.tl().x);
 		});
 
 		int maxCount = 0;
@@ -108,20 +124,20 @@ class ROIExtractor {
 		final double toleranceAreaRatio = 0.25;
 		Rect maxCountRect = null;
 		Rect endRectOfMaxCountRect = null;
-		for (int i = 0; i < pureBoundRects.length; ++i) {
+		for (int i = 0; i < pureBoundRectList.size(); ++i) {
 			int curCount = 0;
-			double curStdArea = pureBoundRects[i].area();
+			double curStdArea = pureBoundRectList.get(i).area();
 			double tolerance = curStdArea * toleranceAreaRatio;
 			double minArea = curStdArea - tolerance;
 			double maxArea = curStdArea + tolerance;
 			
-			for (int j = i + 1; j < pureBoundRects.length; ++j) {
-				deltaX = Math.abs(pureBoundRects[j].tl().x - pureBoundRects[i].tl().x);
+			for (int j = i + 1; j < pureBoundRectList.size(); ++j) {
+				deltaX = Math.abs(pureBoundRectList.get(j).tl().x - pureBoundRectList.get(i).tl().x);
 				if (150 < deltaX) {
 					break;
 				}
 
-				deltaY = Math.abs(pureBoundRects[j].tl().y - pureBoundRects[i].tl().y);
+				deltaY = Math.abs(pureBoundRectList.get(j).tl().y - pureBoundRectList.get(i).tl().y);
 				if (deltaX == 0) {
 					deltaX = 1;
 				}
@@ -132,11 +148,11 @@ class ROIExtractor {
 
 				gradient = deltaY / deltaX;
 //				System.out.println("gradient : " + gradient);
-				double curArea = pureBoundRects[j].area();
+				double curArea = pureBoundRectList.get(j).area();
 				if (gradient < 0.12 && minArea <= curArea && curArea <= maxArea) {
 					++curCount;
 					if (maxCount <= curCount) {
-						endRectOfMaxCountRect = pureBoundRects[j];
+						endRectOfMaxCountRect = pureBoundRectList.get(j);
 //						System.out.println("Bang!!!");
 					}
 				}
@@ -144,7 +160,7 @@ class ROIExtractor {
 
 			if (maxCount < curCount) {
 				maxCount = curCount;
-				maxCountRect = pureBoundRects[i];
+				maxCountRect = pureBoundRectList.get(i);
 			}
 			
 //			System.out.println("\n--------------------\n");
@@ -153,9 +169,9 @@ class ROIExtractor {
 //		Imgproc.rectangle(rawImg, maxCountRect, new Scalar(0, 255, 0), 3, 8, 0);
 //		Imgproc.rectangle(rawImg, endRectOfMaxCountRect, new Scalar(0, 255, 0), 3, 8, 0);
 
-		for (int i = 0; i < pureBoundRects.length; ++i) {
+		for (int i = 0; i < pureBoundRectList.size(); ++i) {
 //			Imgproc.drawContours(rawImg, contourList, i, new Scalar(0, 255, 255), 1, 8, new Mat(), 0, new Point());
-//			Imgproc.rectangle(rawImg, pureBoundRects[i], new Scalar(0, 0, 255), 2, 8, 0);
+//			Imgproc.rectangle(rawImg, pureBoundRectList.get(i), new Scalar(0, 0, 255), 2, 8, 0);
 		}
 		
 //		HighGui.imshow("processed", rawImg);
@@ -178,7 +194,6 @@ class ROIExtractor {
 		Point roiStartPoint = null;
 		Point roiEndPoint = null;
 		if(rtly <= ltly) {
-
 			roiStartPoint = new Point(ltlx - widthVariation, rtly - heightVariation);
 			roiEndPoint = new Point(rbrx + widthVariation, lbry + heightVariation);
 		} else {
