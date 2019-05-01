@@ -38,28 +38,58 @@ import javafx.stage.Stage;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 
+/**
+ * recognizer 내부에 사용될 공유자원
+ * @author inzapp
+ *
+ */
 abstract class pRes {
 
+	// 사용자가 선택한 파일들의 경로가 저장되는 리스트
 	public static List<String> choosedFilePathList;
 }
 
+/**
+ * FXML 이벤트 주입용 인터페이스
+ * @author inzapp
+ *
+ */
 interface EventInjector {
 
+	// 뷰 주입
 	public void injectView();
 
+	// 이벤트 주입
 	public void injectEvent();
 
+	// 사진추가버튼 이벤트
 	public void clickAddBt(Stage stage);
 
+	// 제거버튼 이벤트
 	public void clickRemoveBt();
 
+	// 검출버튼 이벤트
 	public void clickStartBt();
 
+	// 리스트 한 개의 아이템 클릭 이벤트
 	public void clickListMenu();
 }
 
+/**
+ * 사진에서 번호판영역을 감지에 추출하는 클래스
+ * @author inzapp
+ *
+ */
 class ROIExtractor {
 
+	/**
+	 * ROI를 리턴받는다
+	 * [0] : 실제  ROI 로서 OCR판독에 사용된다
+	 * [1] : FX View에 표시될 이미지로서 contour rect가 표시되어있다
+	 * @param raw
+	 * 전처리 과정을 거치지 않은 이미지
+	 * @return
+	 */
 	public Mat[] getROI(Mat raw) {
 		ArrayList<Rect> pureBoundRectList = getPureBoundRectList(raw);
 		Mat view = raw.clone();
@@ -75,7 +105,14 @@ class ROIExtractor {
 		return new Mat[] { roi, view };
 	}
 
-	protected ArrayList<Rect> getPureBoundRectList(Mat raw) {
+	/**
+	 * ROI추출을 위해 모든 contour들을 검출하고 그 중 명시된 번호판 조건에 부합하는 contour들을 추려내 리스트로 반환한다
+	 * ROI를 추출하기 위한 1차적인 정제단계이다
+	 * @param raw
+	 * 전처리 과정을 거치지 않은 이미지
+	 * @return
+	 */
+	private ArrayList<Rect> getPureBoundRectList(Mat raw) {
 		Mat processed = new Mat();
 		Imgproc.blur(raw, processed, new Size(2, 2));
 		Imgproc.cvtColor(processed, processed, Imgproc.COLOR_BGR2GRAY);
@@ -109,6 +146,18 @@ class ROIExtractor {
 		return pureBoundRectList;
 	}
 
+	/**
+	 * 번호판 영역을 잘라내기 위한 번호판 첫째 자리와 마지막 자리의 좌표를 리턴한다
+	 * getPureBoundRectList에서 1차적으로 정제된 contour rect들 중
+	 * 실제 번호판 영역을 검출하기 위해 다음과 같은 과정을 따른다
+	 * 1. pureBoundRectList의 x좌표를 기준으로 정렬한다
+	 * 2. 모든 contour rect를 기준으로 우측에 몇 개의 contour rect가 연속으로 있는지 갯수를 세아린다
+	 * 2-1. 이 때 우측 contour rect간의 거리과 기울기에 따라 더이상 세아릴지를 판단한다
+	 * 3. 가장 많은 카운트를 가진 contour rect가 번호판의 첫째 자리이며 해당 카운트의 마지막번째가 번호판의 마지막 자리이다
+	 * @param pureBoundRectList
+	 * getPureBoundList메소드에서 리턴받는다
+	 * @return
+	 */
 	private Rect[] getCutPointRects(ArrayList<Rect> pureBoundRectList) {
 		pureBoundRectList.sort((prev, next) -> {
 			return Double.compare(prev.tl().x, next.tl().x);
@@ -162,6 +211,15 @@ class ROIExtractor {
 		return new Rect[] { maxCountRect, endRectOfMaxCountRect };
 	}
 
+	/**
+	 * 인자로 받은 Rect[]를 기준으로 번호판 영역을 잘라낼 구역을 리턴한다
+	 * 번호판 영역이 대각선 모양으로 배치되어있는 경우(좌상우하, 좌하우상)의 경우를 모두 고려해 잘라낼 구역을 판단한다
+	 * @param cutPointRects
+	 * getCutPointRects메소드에서 리턴받는다
+	 * [0] : 번호판 첫째 자리 좌표
+	 * [1] : 번호판 마지막 자리 좌표
+	 * @return
+	 */
 	private Rect getRoiRect(Rect[] cutPointRects) {
 		Rect startRect = cutPointRects[0];
 		Rect endRect = cutPointRects[1];
@@ -188,7 +246,12 @@ class ROIExtractor {
 	}
 }
 
-class OCRReader extends ROIExtractor {
+/**
+ * Tesseract를 이용해 OCR결과를 리턴한다
+ * @author inzapp
+ *
+ */
+class OCRReader {
 
 	private Tesseract tesseract;
 
@@ -198,6 +261,12 @@ class OCRReader extends ROIExtractor {
 		tesseract.setLanguage("eng");
 	}
 
+	/**
+	 * ROI를 인자로 받아 OCR 결과를 리턴한다
+	 * @param roi
+	 * ROIExtractor.getROI()[0]
+	 * @return
+	 */
 	public String getOcrResult(Mat roi) {
 		Imgcodecs.imwrite("tmp.jpg", roi);
 		String tmpOcrResult = "";
@@ -207,6 +276,7 @@ class OCRReader extends ROIExtractor {
 			e.printStackTrace();
 		}
 
+		// 영문 번호판의 경우 소문자가 없어 소문자의 경우 오판으로 인식해 제거한다
 		String ocrResult = "";
 		char[] iso = tmpOcrResult.toCharArray();
 		for (char c : iso) {
@@ -223,10 +293,22 @@ class OCRReader extends ROIExtractor {
 	}
 }
 
+/**
+ * 사진파일 추가시 확장자에 대한 유효성 검사를 하는 클래스
+ * @author inzapp
+ *
+ */
 class ValidExtensionChecker {
 
+	// 사용 가능한 확장자
 	private String[] validExtension = { "png", "jpg", "bmp", "jpeg", "PNG", "JPG", "BMP", "JPEG" };
 
+	/**
+	 * 파일의 절대경로를 인자로 받아 해당 확장자가 유효한지 리턴한다
+	 * @param absPath
+	 * File.getAbsolutePath()
+	 * @return
+	 */
 	public boolean isValidExtension(String absPath) {
 		int dotIdx = -1;
 		for (int i = absPath.length() - 1; i >= 0; --i) {
@@ -252,6 +334,11 @@ class ValidExtensionChecker {
 	}
 }
 
+/**
+ * FXML 뷰 레퍼런스
+ * @author inzapp
+ *
+ */
 abstract class View {
 
 	public static ImageView imgView, roiView;
@@ -260,6 +347,11 @@ abstract class View {
 	public static Label resultLb;
 }
 
+/**
+ * Entry 클래스
+ * @author inzapp
+ *
+ */
 public class Recognizer extends Application implements Initializable, EventInjector {
 
 	static {
